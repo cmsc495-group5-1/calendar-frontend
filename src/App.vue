@@ -1,20 +1,36 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
+    <MonthView :events="events" />
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
-import HelloWorld from './components/HelloWorld.vue';
+import { defineComponent } from '@vue/composition-api';
+import MonthView from './views/MonthView.vue';
+import CalendarEvent from './models/CalendarEvent';
 
-@Component({
+export default defineComponent({
+  name: "App",
   components: {
-    HelloWorld,
+    MonthView
   },
+  props: {},
+  setup() {
+    return {
+      events: [
+        // TODO
+        new CalendarEvent("Test Event", new Date("May 30, 2022 13:01:23 EST"), new Date("May 30, 2022 14:00:00 EST")),
+        new CalendarEvent("A really long title break somwhere", new Date("May 24, 2022 13:01:23 EST"), new Date("May 25, 2022 14:00:00 EST")),
+        new CalendarEvent("Test 2", new Date("May 3, 2022 13:01:23 EST"), new Date("May 3, 2022 14:00:00 EST")),
+        new CalendarEvent("Test 3", new Date("May 3, 2022 13:01:23 EST"), new Date("May 3, 2022 14:00:00 EST")),
+        new CalendarEvent("Test 4", new Date("May 3, 2022 13:01:23 EST"), new Date("May 3, 2022 14:00:00 EST")),
+        new CalendarEvent("Test 5", new Date("May 3, 2022 13:01:23 EST"), new Date("May 3, 2022 14:00:00 EST")),
+        new CalendarEvent("Test 6", new Date("May 3, 2022 13:01:23 EST"), new Date("May 3, 2022 14:00:00 EST")),
+        new CalendarEvent("Test 7", new Date("May 3, 2022 13:01:23 EST"), new Date("May 3, 2022 14:00:00 EST"))
+        ]
+    }
+  }
 })
-export default class App extends Vue {}
 </script>
 
 <style lang="scss">
@@ -24,6 +40,7 @@ export default class App extends Vue {}
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  margin-top: 10px;
+  width: 100%;
 }
 </style>

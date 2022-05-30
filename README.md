@@ -1,8 +1,17 @@
-# calendar-frontend
+# Calendar Frontend
 
 ## Project setup
+
+### Local development
 ```
 npm install
+code .
+```
+
+### Deployment
+```
+docker build . -t <tag>
+docker run --rm -p 8888:8080 <id>
 ```
 
 ### Compiles and hot-reloads for development
@@ -14,11 +23,3 @@ npm run serve
 ```
 npm run build
 ```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
