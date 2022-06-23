@@ -1,5 +1,5 @@
 <template>
-  <VDialog max-width="80%" :value="true" target="app">
+  <VDialog max-width="80%" :value="true" target="app" @input="$emit('cancel')">
     <VCard>
       <VCardTitle>Edit Event</VCardTitle>
       <VCardText>
