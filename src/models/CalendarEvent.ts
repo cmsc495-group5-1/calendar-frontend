@@ -1,4 +1,5 @@
 export default class CalendarEvent {
+  id?: number;
   name: string;
   startDate: Date;
   endDate: Date;

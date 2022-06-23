@@ -7,16 +7,21 @@
       <div>{{monthYearString}}</div>
     </div>
     <div class="month">
+      <div v-for="day in getDayNames()" :key="day" class="day day-header">
+        {{ day }}
+      </div>
+      <div class="break"></div>
       <template v-for="(date, dateIdx) in displayDates">
         <template>
-          <div class="day" :key="dateIdx">
+          <div class="day" :key="dateIdx" @click="addEvent(date)">
             <div :class="isToday(date) ? 'current-day' : 'not-current-day'">{{date.getDate()}}</div>
-            <EventBubble v-for="(item, idx) in eventsForDay(date)" :key="idx" :event="item" />
+            <EventBubble v-for="(item, idx) in eventsForDay(date)" :key="idx" :event="item" @click.native.stop="editEvent(item)" />
           </div>
           <div v-if="(dateIdx + 1) % 7 == 0" class="break" :key="dateIdx + 'b'"></div>
         </template>
       </template>
     </div>
+    <EventEditDialog v-if="editing" :event="editingEvent" @cancel="editing = false" @save="saveEvent" />
   </div>
 </template>
 
@@ -24,26 +29,33 @@
 import CalendarEvent from "@/models/CalendarEvent";
 import EventBubble from "../components/EventBubble.vue";
 import { defineComponent, Ref, ref } from "@vue/composition-api";
+import EventEditDialog from "@/components/EventEditDialog.vue";
+import Calendar from "@/models/Calendar";
+import { getDayNames } from '@/util/DateUtils';
 
 interface MonthViewData {
-  displayDate: Ref<Date>
+  displayDate: Ref<Date>;
+  editing: boolean;
+  editingEvent: CalendarEvent | null;
 }
 
 export default defineComponent({
   name: "MonthView",
   components: {
     EventBubble,
-  },
+    EventEditDialog
+},
   setup(): MonthViewData {
     return {
       displayDate: ref(new Date()),
+      editing: false,
+      editingEvent: null
     }
   },
   props: {
-    events: {
-      type: Array, //type: Array<CalendarEvent>,
-      required: true,
-      default: () => new Array<CalendarEvent>()
+    calendar: {
+      type: Calendar,
+      required: true
     },
   },
   computed: {
@@ -57,16 +69,17 @@ export default defineComponent({
       const prevMonthOffset = new Date(this.displayYear, this.displayMonth, 0).getDate() - daysBefore;
 
       // Last day
-      const daysAfter = 6 - this.displayDate.getDay();
+      const daysAfter = 6 - new Date(this.displayYear, this.displayMonth + 1, 0).getDay();
+      const lastDayOfMonth = new Date(this.displayYear, this.displayMonth + 1, 0).getDate();
 
       // Days to display
       const days: Date[] = [];
 
       // Add all days
-      for (let i = 0; i < daysBefore; i++) {
+      for (let i = 1; i <= daysBefore; i++) {
         days.push(new Date(this.displayYear, this.displayMonth - 1, prevMonthOffset + i));
       }
-      for (let i = 1; i <= this.displayDate.getDate(); i++) {
+      for (let i = 1; i <= lastDayOfMonth; i++) {
         days.push(new Date(this.displayYear, this.displayMonth, i));
       }
       for (let i = 0; i < daysAfter; i++) {
@@ -83,8 +96,9 @@ export default defineComponent({
     }
   },
   methods: {
+    getDayNames,
     eventsForDay(day: Date): CalendarEvent[] {
-      return (this.events as CalendarEvent[])
+      return this.calendar.events
         .filter(event => event.startDate.getDate() === day.getDate())
         .filter(event => event.startDate.getMonth() === day.getMonth())
         .filter(event => event.startDate.getFullYear() === day.getFullYear())
@@ -103,6 +117,24 @@ export default defineComponent({
       const newDate = new Date(this.displayDate.getTime());
       newDate.setMonth(newDate.getMonth() + amount);
       this.displayDate = newDate;
+    },
+    addEvent(day: Date) {
+      const dayStr = day.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric"});
+      const endDate = new Date(day);
+      endDate.setDate(endDate.getDate() + 1);
+      this.editingEvent = new CalendarEvent(`Event on ${dayStr}`, day, endDate);
+      this.editing = true;
+    },
+    editEvent(event: CalendarEvent) {
+      this.editingEvent = event;
+      this.editing = true;
+    },
+    saveEvent(event: CalendarEvent) {
+      this.editing = false;
+      //if (!this.calendar.events.includes(event))
+      //  this.calendar.events.push(event);
+      // TODO: save calendar event
+      console.log(event);
     }
   }
 })
@@ -144,5 +176,10 @@ export default defineComponent({
 
 .not-current-day {
   background-color: #efefef;
+}
+
+.day-header {
+  background-color: #efefef;
+  height: fit-content;
 }
 </style>
