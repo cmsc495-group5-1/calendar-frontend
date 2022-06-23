@@ -49,26 +49,26 @@ interface EventEditDialogData {
 }
 
 export default defineComponent({
-    emits: ["cancel", "save"],
-    props: {
-        event: {
-            required: true,
-            type: CalendarEvent,
-        }
-    },
-    setup(props): EventEditDialogData {
-        return {
-            startDate: props.event.startDate,
-            endDate: props.event.endDate
-        };
-    },
-    methods: {
-      buildEvent(): CalendarEvent {
-        const e = this.event;
-        e.startDate = this.startDate;
-        e.endDate = this.endDate;
-        return e;
-      }
+  emits: ["cancel", "save"],
+  props: {
+    event: {
+      required: true,
+      type: CalendarEvent,
     }
+  },
+  setup(props): EventEditDialogData {
+    return {
+      startDate: props.event.startDate,
+      endDate: props.event.endDate
+    };
+  },
+  methods: {
+    buildEvent(): CalendarEvent {
+      const e = this.event;
+      e.startDate = this.startDate;
+      e.endDate = this.endDate;
+      return e;
+    }
+  }
 })
 </script>
