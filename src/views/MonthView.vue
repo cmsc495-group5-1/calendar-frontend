@@ -1,11 +1,5 @@
 <template>
   <div>
-    <div class="header">
-      <VBtn @click="navigateToToday()">Today</VBtn>
-      <VBtn icon @click="navigateMonths(-1)"><VIcon>mdi-chevron-left</VIcon></VBtn>
-      <VBtn icon @click="navigateMonths(1)"><VIcon>mdi-chevron-right</VIcon></VBtn>
-      <div>{{monthYearString}}</div>
-    </div>
     <div class="month">
       <div v-for="day in getDayNames()" :key="day" class="day day-header">
         {{ day }}
@@ -44,7 +38,8 @@ export default defineComponent({
   components: {
     EventBubble,
     EventEditDialog
-},
+  },
+  emits: [ "input" ],
   setup(): MonthViewData {
     return {
       displayDate: ref(new Date()),
@@ -57,6 +52,11 @@ export default defineComponent({
       type: Calendar,
       required: true
     },
+    value: {
+      type: String,
+      required: false,
+      default: ""
+    }
   },
   computed: {
     monthYearString(): string {
@@ -112,11 +112,19 @@ export default defineComponent({
     },
     navigateToToday() {
       this.displayDate = new Date();
+      this.$emit("input", this.monthYearString);
+    },
+    navigateBackward() {
+      this.navigateMonths(-1);
+    },
+    navigateForward() {
+      this.navigateMonths(1);
     },
     navigateMonths(amount: number) {
       const newDate = new Date(this.displayDate.getTime());
       newDate.setMonth(newDate.getMonth() + amount);
       this.displayDate = newDate;
+      this.$emit("input", this.monthYearString);
     },
     addEvent(day: Date) {
       const dayStr = day.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric"});
@@ -136,6 +144,9 @@ export default defineComponent({
       // TODO: save calendar event
       console.log(event);
     }
+  },
+  mounted() {
+    this.navigateToToday();
   }
 })
 </script>
@@ -144,14 +155,6 @@ export default defineComponent({
 .break {
   flex-basis: 100%;
   height: 0;
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  flex-direction: row;
-  gap: 1rem;
-  padding-bottom: 1rem;
 }
 
 .month {

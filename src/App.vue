@@ -1,6 +1,13 @@
 <template>
   <VApp id="app">
-    <MonthView :calendar="calendar" />
+    <div class="header">
+      <VBtn @click="navigateToToday">Today</VBtn>
+      <VBtn icon @click="navigateBackward"><VIcon>mdi-chevron-left</VIcon></VBtn>
+      <VBtn icon @click="navigateForward"><VIcon>mdi-chevron-right</VIcon></VBtn>
+      <div>{{displayDateString}}</div>
+      <div class="flex-right">username here</div>
+    </div>
+    <MonthView :calendar="calendar" ref="currentView" v-model="displayDateString" />
   </VApp>
 </template>
 
@@ -27,7 +34,19 @@ export default defineComponent({
         new CalendarEvent("Test 5", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST")),
         new CalendarEvent("Test 6", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST")),
         new CalendarEvent("Test 7", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST"))
-        ])
+        ]),
+      displayDateString: ""
+    }
+  },
+  methods: {
+    navigateToToday() {
+      (this.$refs.currentView as any).navigateToToday();
+    },
+    navigateBackward() {
+      (this.$refs.currentView as any).navigateBackward();
+    },
+    navigateForward() {
+      (this.$refs.currentView as any).navigateForward();
     }
   }
 })
@@ -42,5 +61,19 @@ export default defineComponent({
   color: #2c3e50;
   margin-top: 10px;
   width: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  padding-left: 2em;
+  padding-right: 2em;
+}
+
+.flex-right {
+  margin-left: auto;
 }
 </style>
