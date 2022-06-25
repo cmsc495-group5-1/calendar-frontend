@@ -1,17 +1,20 @@
 <template>
-  <div class="week">
-    <div v-for="day in getDayNames()" :key="day" class="day day-header">
-      {{ day }}
+  <div class="week-container">
+    <div class="day-headers">
+      <div v-for="day in getDayNames()" :key="day" class="day day-header">
+        {{ day }}
+      </div>
     </div>
-    <div class="break"></div>
-    <template v-for="(date, dateIdx) in displayDates">
-      <template>
-        <div class="day" :key="dateIdx" @click="$emit('add-event', date)">
-          <div :class="isToday(date) ? 'current-day' : 'not-current-day'">{{date.getDate()}}</div>
-          <EventBubble v-for="(item, idx) in eventsForDay(date)" :key="idx" :event="item" @click.native.stop="$emit('edit-event', item)" />
-        </div>
+    <div class="week">
+      <template v-for="(date, dateIdx) in displayDates">
+        <template>
+          <div class="day" :key="dateIdx" @click="$emit('add-event', date)">
+            <div :class="isToday(date) ? 'current-day' : 'not-current-day'">{{date.getDate()}}</div>
+            <EventBubble v-for="(item, idx) in eventsForDay(date)" :key="idx" :event="item" @click.native.stop="$emit('edit-event', item)" />
+          </div>
+        </template>
       </template>
-    </template>
+    </div>
   </div>
 </template>
 
@@ -65,7 +68,6 @@ export default defineComponent({
         days.push(new Date(this.displayYear, this.displayMonth, this.displayDate.getDate() + i));
       }
 
-      console.log(this.displayDate, daysBefore, daysAfter, days);
       return days;
     },
     displayYear(): number {
@@ -131,10 +133,22 @@ export default defineComponent({
   height: 0;
 }
 
+.week-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .week {
-  border: 1px solid black;
   display: flex;
   flex-wrap: wrap;
+  height: 100%;
+}
+
+.day-headers {
+  display: flex;
+  flex-wrap: wrap;
+  height: fit-content;
 }
 
 .day {
@@ -143,7 +157,6 @@ export default defineComponent({
   flex-direction: column;
   align-content: center;
   width: calc(100% / 7);
-  height: 6em;
 }
 
 .day-header {
