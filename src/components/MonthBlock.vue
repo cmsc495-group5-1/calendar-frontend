@@ -82,6 +82,7 @@ export default defineComponent({
 
 .current-day {
   background-color: dodgerblue;
+  color: white;
 }
 
 .invisible {
