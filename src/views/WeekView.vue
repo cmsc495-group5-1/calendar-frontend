@@ -62,9 +62,10 @@ export default defineComponent({
       }
       days.push(this.displayDate);
       for (let i = 1; i <= daysAfter; i++) {
-        days.push(new Date(this.displayYear, this.displayMonth, i));
+        days.push(new Date(this.displayYear, this.displayMonth, this.displayDate.getDate() + i));
       }
 
+      console.log(this.displayDate, daysBefore, daysAfter, days);
       return days;
     },
     displayYear(): number {
