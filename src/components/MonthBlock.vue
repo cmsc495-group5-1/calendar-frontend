@@ -52,6 +52,7 @@ export default defineComponent({
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
+  gap: 0.33em;
 }
 
 .week {
@@ -73,6 +74,10 @@ export default defineComponent({
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.day:hover {
+  cursor: pointer;
 }
 
 .current-day {
