@@ -84,7 +84,7 @@ export default defineComponent({
     getDayNames,
     isToday,
     formatDate(date: Date): string {
-      return date.toLocaleDateString(undefined, { year: "numeric", month: "short"});
+      return date.toLocaleDateString(undefined, { year: "numeric", month: "long"});
     },
     eventsForDay(day: Date): CalendarEvent[] {
       return this.calendar.events
