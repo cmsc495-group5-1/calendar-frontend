@@ -84,12 +84,18 @@ export default defineComponent({
       if (dates.length == 0) {
         return date.toLocaleDateString(undefined, { year: "numeric", month: "short"});
       }
-      const startDay = dates[0].getDate();
-      const endDay = dates[dates.length - 1].getDate();
+      const startDay = dates[0];
+      const endDay = dates[dates.length - 1];
 
-      const monthPart = date.toLocaleDateString(undefined, { month: "short" });
-      const yearPart = date.toLocaleDateString(undefined, { year: "numeric" });
-      return `${monthPart} ${startDay} - ${endDay} ${yearPart}`;
+      const startMonthPart = startDay.toLocaleDateString(undefined, { month: "short" });
+      let endMonthPart = endDay.toLocaleDateString(undefined, { month: "short" });
+      endMonthPart = startMonthPart != endMonthPart ? " " + endMonthPart : "";
+
+      let startYearPart = startDay.toLocaleDateString(undefined, { year: "numeric" });
+      let endYearPart = endDay.toLocaleDateString(undefined, { year: "numeric" });
+      startYearPart = startYearPart != endYearPart ? " " + startYearPart : "";
+
+      return `${startMonthPart} ${startDay.getDate()}${startYearPart} -${endMonthPart} ${endDay.getDate()} ${endYearPart}`;
     },
     eventsForDay(day: Date): CalendarEvent[] {
       return this.calendar.events
