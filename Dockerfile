@@ -5,14 +5,14 @@ WORKDIR /app
 
 # Copy in & install dependencies
 COPY ["package.json", "package-lock.json*", "./"]
-RUN npm install
+RUN npm install && npm install -g http-server
 
 # Copy app
 COPY . .
 
+RUN npm run build
+
 # Set non-root user
-RUN chown -R node: /app
 USER node
 
-# TODO: switch this to prod
-CMD [ "npm", "run", "serve" ]
+CMD [ "http-server", "dist", "-d", "false" ]
