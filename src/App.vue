@@ -1,7 +1,7 @@
 <template>
   <VApp id="app">
     <div class="header">
-      <VSelect :items="viewTypeItems" label="Switch View" dense outlined hide-details class="fit-content" v-model="currentViewType">
+      <VSelect :items="viewTypeItems" label="View" dense outlined hide-details class="fit-content" v-model="currentViewType">
 
       </VSelect>
       <VBtn @click="navigateToToday">Today</VBtn>
