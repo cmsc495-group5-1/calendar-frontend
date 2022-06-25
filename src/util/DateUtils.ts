@@ -7,3 +7,10 @@ export function getDayNames(format: "long" | "short" | "narrow" | undefined = 'l
   });
   return days.map(date => formatter.format(date));
 }
+
+export function isToday(day: Date): boolean {
+  const today = new Date();
+  return day.getDate() == today.getDate() &&
+    day.getMonth() == today.getMonth() &&
+    day.getFullYear() == today.getFullYear();
+}

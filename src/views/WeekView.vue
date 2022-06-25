@@ -1,5 +1,5 @@
 <template>
-  <div class="month">
+  <div class="week">
     <div v-for="day in getDayNames()" :key="day" class="day day-header">
       {{ day }}
     </div>
@@ -10,7 +10,6 @@
           <div :class="isToday(date) ? 'current-day' : 'not-current-day'">{{date.getDate()}}</div>
           <EventBubble v-for="(item, idx) in eventsForDay(date)" :key="idx" :event="item" @click.native.stop="$emit('edit-event', item)" />
         </div>
-        <div v-if="(dateIdx + 1) % 7 == 0" class="break" :key="dateIdx + 'b'"></div>
       </template>
     </template>
   </div>
@@ -21,7 +20,7 @@ import CalendarEvent from "@/models/CalendarEvent";
 import EventBubble from "../components/EventBubble.vue";
 import { defineComponent } from "@vue/composition-api";
 import Calendar from "@/models/Calendar";
-import { getDayNames, isToday } from '@/util/DateUtils';
+import { getDayNames } from '@/util/DateUtils';
 
 export default defineComponent({
   components: {
@@ -48,27 +47,22 @@ export default defineComponent({
   },
   computed: {
     displayDates(): Date[] {
-      // First day of month
-      const firstDay = new Date(this.displayYear, this.displayMonth, 1);
-      const daysBefore = firstDay.getDay();
-      const prevMonthOffset = new Date(this.displayYear, this.displayMonth, 0).getDate() - daysBefore;
+      // First day of week
+      const daysBefore = this.displayDate.getDay();
 
       // Last day
-      const daysAfter = 6 - new Date(this.displayYear, this.displayMonth + 1, 0).getDay();
-      const lastDayOfMonth = new Date(this.displayYear, this.displayMonth + 1, 0).getDate();
+      const daysAfter = 6 - this.displayDate.getDay();
 
       // Days to display
       const days: Date[] = [];
 
       // Add all days
-      for (let i = 1; i <= daysBefore; i++) {
-        days.push(new Date(this.displayYear, this.displayMonth - 1, prevMonthOffset + i));
+      for (let i = -daysBefore; i < 0; i++) {
+        days.push(new Date(this.displayYear, this.displayMonth, this.displayDate.getDate() + i));
       }
-      for (let i = 1; i <= lastDayOfMonth; i++) {
+      days.push(this.displayDate);
+      for (let i = 1; i <= daysAfter; i++) {
         days.push(new Date(this.displayYear, this.displayMonth, i));
-      }
-      for (let i = 0; i < daysAfter; i++) {
-        days.push(new Date(this.displayYear, this.displayMonth + 1, i + 1));
       }
 
       return days;
@@ -82,9 +76,17 @@ export default defineComponent({
   },
   methods: {
     getDayNames,
-    isToday,
     formatDate(date: Date): string {
-      return date.toLocaleDateString(undefined, { year: "numeric", month: "short"});
+      const dates = this.displayDates;
+      if (dates.length == 0) {
+        return date.toLocaleDateString(undefined, { year: "numeric", month: "short"});
+      }
+      const startDay = dates[0].getDate();
+      const endDay = dates[dates.length - 1].getDate();
+
+      const monthPart = date.toLocaleDateString(undefined, { month: "short" });
+      const yearPart = date.toLocaleDateString(undefined, { year: "numeric" });
+      return `${monthPart} ${startDay} - ${endDay} ${yearPart}`;
     },
     eventsForDay(day: Date): CalendarEvent[] {
       return this.calendar.events
@@ -93,15 +95,21 @@ export default defineComponent({
         .filter(event => event.startDate.getFullYear() === day.getFullYear())
         .slice(0, 4);
     },
+    isToday(day: Date): boolean {
+      const today = new Date();
+      return day.getDate() == today.getDate() &&
+        day.getMonth() == today.getMonth() &&
+        day.getFullYear() == today.getFullYear();
+    },
     navigateBackward() {
-      return this.navigateMonths(-1);
+      return this.navigateWeeks(-1);
     },
     navigateForward() {
-      return this.navigateMonths(1);
+      return this.navigateWeeks(1);
     },
-    navigateMonths(amount: number) {
+    navigateWeeks(amount: number) {
       const newDate = new Date(this.displayDate.getTime());
-      newDate.setMonth(newDate.getMonth() + amount);
+      newDate.setDate(newDate.getDate() + (amount * 7));
       return newDate;
     }
   },
@@ -122,7 +130,7 @@ export default defineComponent({
   height: 0;
 }
 
-.month {
+.week {
   border: 1px solid black;
   display: flex;
   flex-wrap: wrap;
@@ -137,17 +145,13 @@ export default defineComponent({
   height: 6em;
 }
 
-.current-day {
-  background-color: dodgerblue;
-  color: white;
-}
-
-.not-current-day {
-  background-color: #efefef;
-}
-
 .day-header {
   background-color: #efefef;
   height: fit-content;
+}
+
+.current-day {
+  background-color: dodgerblue;
+  color: white;
 }
 </style>

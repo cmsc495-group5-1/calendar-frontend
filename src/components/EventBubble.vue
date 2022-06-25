@@ -1,6 +1,10 @@
 <template>
-  <div class="event">
+  <div class="event ellipsize">
     {{ event.name }}
+    <div v-if="expanded" class="subtext">
+      <div v-if="event.location" class="ellipsize">{{event.location}}</div>
+      <div v-if="event.description" class="ellipsize flex-right">{{event.description}}</div>
+    </div>
   </div>
 </template>
 
@@ -14,6 +18,11 @@ export default defineComponent({
     event: {
       type: CalendarEvent,
       required: true,
+    },
+    expanded: {
+      type: Boolean,
+      required: false,
+      default: false
     }
   }
 })
@@ -25,11 +34,25 @@ export default defineComponent({
   width: 100%;
   max-width: 100%;
 
+  background-color: green;
+  color: white;
+}
+
+.ellipsize {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
 
-  background-color: green;
-  color: white;
+.flex-right {
+  margin-left: auto;
+}
+
+.subtext {
+  padding-left: 1em;
+  padding-right: 1em;
+  font-size: small;
+  display: flex;
+  gap: 1em;
 }
 </style>
