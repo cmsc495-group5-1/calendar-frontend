@@ -193,9 +193,13 @@ export default defineComponent({
 .event-expander {
   font-weight: bold;
   font-size: x-small;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.33s;
 }
 
 .event-expander:hover {
   cursor: pointer;
+  text-decoration-color: black;
 }
 </style>
