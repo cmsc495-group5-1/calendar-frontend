@@ -3,7 +3,7 @@
     <VContainer fluid class="fill-height pa-0">
       <VRow fluid class="fill-height">
         <VCol fluid class="pt-0 flex-grow-0"><AppSidebar v-model="sidebarCalendars" @add-calendar="addCalendar" @edit-calendar="editCalendar" /></VCol>
-        <VCol fluid class="d-flex flex-column">
+        <VCol fluid class="d-flex flex-column mr-1em">
           <div class="header">
             <VSelect :items="viewTypeItems" label="View" dense outlined hide-details class="fit-content" v-model="currentViewType">
             </VSelect>
@@ -174,8 +174,8 @@ export default defineComponent({
   flex-direction: row;
   gap: 1rem;
   padding-bottom: 1rem;
-  padding-left: 1em;
-  padding-right: 1em;
+  padding-left: 0px;
+  padding-right: 0px;
   padding-top: 1em;
 }
 
@@ -184,7 +184,7 @@ export default defineComponent({
   max-width: fit-content;
 }
 
-.pad-right {
+.mr-1em {
   margin-right: 1em;
 }
 </style>
