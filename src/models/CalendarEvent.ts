@@ -1,5 +1,8 @@
+import Calendar from "./Calendar";
+
 export default class CalendarEvent {
   id?: number;
+  calendar?: Calendar;
   name: string;
   startDate: Date;
   endDate: Date;
