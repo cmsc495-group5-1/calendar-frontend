@@ -1,28 +1,34 @@
 <template>
   <VApp id="app">
-    <div class="header">
-      <VSelect :items="viewTypeItems" label="View" dense outlined hide-details class="fit-content" v-model="currentViewType">
+    <VContainer fluid class="fill-height pa-0">
+      <VRow fluid class="fill-height">
+        <VCol fluid cols="2"><AppSidebar /></VCol>
+        <VCol fluid cols="10" class="d-flex flex-column">
+          <div class="header">
+            <VSelect :items="viewTypeItems" label="View" dense outlined hide-details class="fit-content" v-model="currentViewType">
+            </VSelect>
+            <VBtn @click="navigateToToday">Today</VBtn>
+            <VBtn icon @click="navigateBackward"><VIcon>mdi-chevron-left</VIcon></VBtn>
+            <VBtn icon @click="navigateForward"><VIcon>mdi-chevron-right</VIcon></VBtn>
+            <div>{{displayDateString}}</div>
+            <div class="ml-auto">username here</div>
+          </div>
 
-      </VSelect>
-      <VBtn @click="navigateToToday">Today</VBtn>
-      <VBtn icon @click="navigateBackward"><VIcon>mdi-chevron-left</VIcon></VBtn>
-      <VBtn icon @click="navigateForward"><VIcon>mdi-chevron-right</VIcon></VBtn>
-      <div>{{displayDateString}}</div>
-      <div class="flex-right">username here</div>
-    </div>
-
-    <DayView v-if="currentViewType == CurrentCalendarView.Day" v-model="displayDateString" :calendar="calendar" ref="currentView" :display-date="displayDate" @add-event="addEvent" @edit-event="editEvent" />
-    <WeekView v-else-if="currentViewType == CurrentCalendarView.Week" v-model="displayDateString" :calendar="calendar" ref="currentView" :display-date="displayDate" @add-event="addEvent" @edit-event="editEvent" />
-    <MonthView v-else-if="currentViewType == CurrentCalendarView.Month" v-model="displayDateString" :calendar="calendar" ref="currentView" :display-date="displayDate" @add-event="addEvent" @edit-event="editEvent" />
-    <YearView v-else-if="currentViewType == CurrentCalendarView.Year" v-model="displayDateString" :calendar="calendar" ref="currentView" :display-date="displayDate" @add-event="addEvent" @edit-event="editEvent"
-      @nav-to-day="navToDay" @nav-to-month="navToMonth" />
-
+          <DayView class="pad-right" v-if="currentViewType == CurrentCalendarView.Day" v-model="displayDateString" :calendar="calendar" ref="currentView" :display-date="displayDate" @add-event="addEvent" @edit-event="editEvent" />
+          <WeekView class="pad-right" v-else-if="currentViewType == CurrentCalendarView.Week" v-model="displayDateString" :calendar="calendar" ref="currentView" :display-date="displayDate" @add-event="addEvent" @edit-event="editEvent" />
+          <MonthView class="pad-right" v-else-if="currentViewType == CurrentCalendarView.Month" v-model="displayDateString" :calendar="calendar" ref="currentView" :display-date="displayDate" @add-event="addEvent" @edit-event="editEvent" />
+          <YearView class="pad-right" v-else-if="currentViewType == CurrentCalendarView.Year" v-model="displayDateString" :calendar="calendar" ref="currentView" :display-date="displayDate" @add-event="addEvent" @edit-event="editEvent"
+            @nav-to-day="navToDay" @nav-to-month="navToMonth" />
+        </VCol>
+      </VRow>
+    </VContainer>
     <EventEditDialog v-model="editing" :event="editingEvent" @cancel="editing = false" @save="saveEvent" @delete="deleteEvent" />
   </VApp>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref } from '@vue/composition-api';
+import AppSidebar from './components/AppSidebar.vue';
 import DayView from './views/DayView.vue';
 import WeekView from './views/WeekView.vue';
 import MonthView from './views/MonthView.vue';
@@ -40,6 +46,7 @@ const CurrentCalendarView = {
 
 export default defineComponent({
   components: {
+    AppSidebar,
     DayView,
     WeekView,
     MonthView,
@@ -138,17 +145,17 @@ export default defineComponent({
   flex-direction: row;
   gap: 1rem;
   padding-bottom: 1rem;
-  padding-left: 2em;
-  padding-right: 2em;
+  padding-left: 1em;
+  padding-right: 1em;
   padding-top: 1em;
-}
-
-.flex-right {
-  margin-left: auto;
 }
 
 .fit-content {
   width: fit-content;
   max-width: fit-content;
+}
+
+.pad-right {
+  margin-right: 1em;
 }
 </style>

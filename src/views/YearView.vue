@@ -75,8 +75,7 @@ export default defineComponent({
 .year {
   display: flex;
   flex-wrap: wrap;
-  height: 100%;
-  padding: 1em;
+  flex-grow: 1;
 }
 
 .month {

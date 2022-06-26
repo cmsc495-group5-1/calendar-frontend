@@ -74,8 +74,7 @@ export default defineComponent({
   flex-wrap: wrap;
   flex-direction: column;
   align-content: center;
-  width: 100%;
-  height: 100%;
+  flex-grow: 1;
   gap: 0.25em;
 }
 

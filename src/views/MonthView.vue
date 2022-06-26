@@ -3,14 +3,12 @@
     <div v-for="day in getDayNames()" :key="day" class="day day-header">
       {{ day }}
     </div>
-    <div class="break"></div>
     <template v-for="(date, dateIdx) in displayDates">
       <template>
         <div class="day" :key="dateIdx" @click="$emit('add-event', date)">
           <div :class="isToday(date) ? 'current-day' : 'not-current-day'">{{date.getDate()}}</div>
           <EventBubble v-for="(item, idx) in eventsForDay(date)" :key="idx" :event="item" @click.native.stop="$emit('edit-event', item)" />
         </div>
-        <div v-if="(dateIdx + 1) % 7 == 0" class="break" :key="dateIdx + 'b'"></div>
       </template>
     </template>
   </div>
@@ -117,11 +115,6 @@ export default defineComponent({
 </script>
 
 <style scoped lang="scss">
-.break {
-  flex-basis: 100%;
-  height: 0;
-}
-
 .month {
   display: flex;
   flex-wrap: wrap;
