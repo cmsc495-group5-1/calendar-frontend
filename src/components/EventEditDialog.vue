@@ -78,6 +78,12 @@ export default defineComponent({
       confirmDialogText: ""
     };
   },
+  watch: {
+    event() {
+      this.startDate = this.event.startDate;
+      this.endDate = this.event.endDate;
+    }
+  },
   methods: {
     buildEvent(): CalendarEvent {
       const e = this.event;
