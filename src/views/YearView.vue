@@ -1,6 +1,11 @@
 <template>
   <div class="year">
-    <MonthBlock v-for="month in getMonths()" class="month" :month="month" :key="month.getMonth()" @nav-to-day="$emit('nav-to-day', $event)" @nav-to-month="$emit('nav-to-month', $event)" />
+    <template v-for="(month, i) in getMonths()">
+      <template>
+        <MonthBlock class="month" :month="month" :key="month.getMonth()" @nav-to-day="$emit('nav-to-day', $event)" @nav-to-month="$emit('nav-to-month', $event)" />
+        <div class="break" v-if="(i + 1) % 4 == 0" :key="month.getMonth() + 'b'"></div>
+      </template>
+    </template>
   </div>
 </template>
 
@@ -71,10 +76,17 @@ export default defineComponent({
   display: flex;
   flex-wrap: wrap;
   flex-grow: 1;
+  gap: 0.5rem;
+}
+
+.break {
+  flex-basis: 100%;
+  height: 0px;
 }
 
 .month {
   border: 1px solid lightgray;
   border-collapse: collapse;
+  flex: 1 1 auto;
 }
 </style>

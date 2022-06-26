@@ -2,8 +2,8 @@
   <VApp id="app">
     <VContainer fluid class="fill-height pa-0">
       <VRow fluid class="fill-height">
-        <VCol fluid cols="3" class="pt-0"><AppSidebar v-model="sidebarCalendars" @add-calendar="addCalendar" @edit-calendar="editCalendar" /></VCol>
-        <VCol fluid cols="9" class="d-flex flex-column">
+        <VCol fluid class="pt-0 flex-grow-0"><AppSidebar v-model="sidebarCalendars" @add-calendar="addCalendar" @edit-calendar="editCalendar" /></VCol>
+        <VCol fluid class="d-flex flex-column">
           <div class="header">
             <VSelect :items="viewTypeItems" label="View" dense outlined hide-details class="fit-content" v-model="currentViewType">
             </VSelect>

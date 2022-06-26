@@ -1,5 +1,5 @@
 <template>
-  <div class="month">
+  <div class="month pb-2">
     <div @click="$emit('nav-to-month', month)">{{ month.toLocaleDateString(undefined, { month: "short" }) }}</div>
     <div v-for="week in 5" :key="week" class="week">
       <div v-for="day in getDaysForWeek(week - 1)" :key="day.getDate()" @click="$emit('nav-to-day', day)"
