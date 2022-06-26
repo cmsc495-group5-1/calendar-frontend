@@ -1,20 +1,19 @@
 <template>
-  <div class="d-flex flex-column">
-    <div class="d-flex flex-wrap">
-      <div v-for="day in getDayNames()" :key="day" class="day day-header">
-        {{ day }}
-      </div>
+  <div class="month-grid">
+    <div v-for="day in getDayNames()" :key="day" class="day day-header">
+      {{ day }}
     </div>
-    <div class="month-grid">
-      <template v-for="(date, dateIdx) in displayDates">
-        <template>
-          <div class="day" :key="dateIdx" @click="$emit('add-event', date)">
-            <div :class="isToday(date) ? 'current-day' : 'not-current-day'">{{date.getDate()}}</div>
-            <EventBubble v-for="(item, idx) in eventsForDay(date)" :key="idx" :event="item" @click.native.stop="$emit('edit-event', item)" />
+    <template v-for="(date, dateIdx) in displayDates">
+      <template>
+        <div class="day" :key="dateIdx" @click="$emit('add-event', date)">
+          <div :class="isToday(date) ? 'current-day' : 'not-current-day'">{{date.getDate()}}</div>
+          <EventBubble v-for="(item, idx) in eventsForDay(date)" :key="idx" :event="item" @click.native.stop="$emit('edit-event', item)" />
+          <div v-if="eventsForDayHasOverflow(date)" class="event-expander" @click.stop="showMoreEvents(date)">
+            {{ eventsForDayOverflowCount(date) }} more...
           </div>
-        </template>
+        </div>
       </template>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -89,11 +88,27 @@ export default defineComponent({
       return date.toLocaleDateString(undefined, { year: "numeric", month: "long"});
     },
     eventsForDay(day: Date): CalendarEvent[] {
+      const events = this.calendar.events
+        .filter(event => event.startDate.getDate() === day.getDate())
+        .filter(event => event.startDate.getMonth() === day.getMonth())
+        .filter(event => event.startDate.getFullYear() === day.getFullYear());
+      if (events.length > 4)
+        return events.slice(0, 3);
+      return events.slice(0, 3);
+    },
+    eventsForDayHasOverflow(day: Date): boolean {
+      const events = this.calendar.events
+        .filter(event => event.startDate.getDate() === day.getDate())
+        .filter(event => event.startDate.getMonth() === day.getMonth())
+        .filter(event => event.startDate.getFullYear() === day.getFullYear());
+      return events.length > 4;
+    },
+    eventsForDayOverflowCount(day: Date): number {
       return this.calendar.events
         .filter(event => event.startDate.getDate() === day.getDate())
         .filter(event => event.startDate.getMonth() === day.getMonth())
         .filter(event => event.startDate.getFullYear() === day.getFullYear())
-        .slice(0, 4);
+        .length - 4;
     },
     navigateBackward() {
       return this.navigateMonths(-1);
@@ -105,6 +120,9 @@ export default defineComponent({
       const newDate = new Date(this.displayDate.getTime());
       newDate.setMonth(newDate.getMonth() + amount);
       return newDate;
+    },
+    showMoreEvents(day: Date) {
+      console.log(day);
     }
   },
   watch: {
@@ -125,6 +143,7 @@ export default defineComponent({
   flex-direction: column;
   align-content: center;
   overflow: hidden;
+  gap: 1px;
 }
 
 .current-day {
@@ -137,7 +156,6 @@ export default defineComponent({
 }
 
 .day-header {
-  width: calc(100% / 7);
   background-color: #efefef;
   height: fit-content;
 }
@@ -145,8 +163,20 @@ export default defineComponent({
 .month-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  /* TODO: 0.95 keeps it from overflowing but isn't the correct answer */
-  grid-auto-rows: 0.95fr;
-  max-height: 100%;
+  grid-template-rows: auto;
+  grid-auto-rows: 1fr;
+  height: 100%;
+}
+
+.event-expander {
+  font-weight: bold;
+  font-size: x-small;
+
+  width: 100%;
+  max-width: 100%;
+}
+
+.event-expander:hover {
+  cursor: pointer;
 }
 </style>

@@ -38,6 +38,10 @@ export default defineComponent({
   color: white;
 }
 
+.event:hover {
+  cursor: pointer;
+}
+
 .ellipsize {
   overflow: hidden;
   white-space: nowrap;
