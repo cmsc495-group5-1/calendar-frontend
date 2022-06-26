@@ -1,5 +1,5 @@
 <template>
-  <VDialog max-width="80%" :value="true" target="app" @input="$emit('cancel')">
+  <VDialog max-width="80%" :value="value" target="app" transition="dialog-bottom-transition" @input="$emit('cancel')">
     <VCard>
       <VCardTitle>Edit Event</VCardTitle>
       <VCardText>
@@ -32,34 +32,50 @@
       </VCardText>
       <VCardActions>
         <VSpacer />
+        <VBtn v-if="event.id" color="red darken-1" text @click="showConfirmDelete">Delete</VBtn>
         <VBtn color="blue darken-1" text @click="$emit('cancel')">Cancel</VBtn>
         <VBtn color="blue darken-1" text @click="$emit('save', buildEvent())">Save</VBtn>
       </VCardActions>
     </VCard>
+    <ConfirmDialog v-model="showConfirmDialog" action="Delete" :text="confirmDialogText"
+      @cancel="showConfirmDialog = false" @confirm="confirmDelete" />
   </VDialog>
 </template>
 
 <script lang="ts">
 import CalendarEvent from "@/models/CalendarEvent";
 import { defineComponent } from "@vue/composition-api";
+import ConfirmDialog from './ConfirmDialog.vue';
 
 interface EventEditDialogData {
   startDate: Date;
   endDate: Date;
+  showConfirmDialog: boolean;
+  confirmDialogText: string;
 }
 
 export default defineComponent({
-  emits: ["cancel", "save"],
+  emits: ["delete", "cancel", "save"],
+  components: {
+    ConfirmDialog
+  },
   props: {
     event: {
       required: true,
       type: CalendarEvent,
+    },
+    value: {
+      type: Boolean,
+      required: false,
+      default: true
     }
   },
   setup(props): EventEditDialogData {
     return {
       startDate: props.event.startDate,
-      endDate: props.event.endDate
+      endDate: props.event.endDate,
+      showConfirmDialog: false,
+      confirmDialogText: ""
     };
   },
   methods: {
@@ -68,6 +84,14 @@ export default defineComponent({
       e.startDate = this.startDate;
       e.endDate = this.endDate;
       return e;
+    },
+    showConfirmDelete() {
+      this.confirmDialogText = `Confirm deletion of ${this.event.name}?`;
+      this.showConfirmDialog = true;
+    },
+    confirmDelete() {
+      this.showConfirmDialog = false;
+      this.$emit('delete', this.event);
     }
   }
 })

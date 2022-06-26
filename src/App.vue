@@ -17,7 +17,7 @@
     <YearView v-else-if="currentViewType == CurrentCalendarView.Year" v-model="displayDateString" :calendar="calendar" ref="currentView" :display-date="displayDate" @add-event="addEvent" @edit-event="editEvent"
       @nav-to-day="navToDay" @nav-to-month="navToMonth" />
 
-    <EventEditDialog v-if="editing" :event="editingEvent" @cancel="editing = false" @save="saveEvent" />
+    <EventEditDialog v-model="editing" :event="editingEvent" @cancel="editing = false" @save="saveEvent" @delete="deleteEvent" />
   </VApp>
 </template>
 
@@ -48,10 +48,13 @@ export default defineComponent({
   },
   props: {},
   setup() {
+    const event1 = new CalendarEvent("Test Event", new Date("Jun 30, 2022 13:01:23 EST"), new Date("Jun 30, 2022 14:00:00 EST"));
+    event1.id = 1;
+
     return {
       calendar: new Calendar("My Cal 1", [
         // TODO
-        new CalendarEvent("Test Event", new Date("Jun 30, 2022 13:01:23 EST"), new Date("Jun 30, 2022 14:00:00 EST")),
+        event1,
         new CalendarEvent("A really long title break somwhere", new Date("Jun 24, 2022 13:01:23 EST"), new Date("Jun 25, 2022 14:00:00 EST")),
         new CalendarEvent("Test 2", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST"),
           "Some location", "This is a very long description, I need it to run over the end of the view and get hidden or something like that"),
@@ -108,6 +111,10 @@ export default defineComponent({
       //if (!this.calendar.events.includes(event))
       //  this.calendar.events.push(event);
       // TODO: save calendar event
+      this.editing = false;
+      console.log(event);
+    },
+    deleteEvent(event: CalendarEvent) {
       this.editing = false;
       console.log(event);
     }
