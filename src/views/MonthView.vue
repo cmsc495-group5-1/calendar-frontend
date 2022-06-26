@@ -52,8 +52,8 @@ export default defineComponent({
     };
   },
   props: {
-    calendar: {
-      type: Calendar,
+    calendars: {
+      type: Array,
       required: true
     },
     value: {
@@ -107,7 +107,7 @@ export default defineComponent({
       return date.toLocaleDateString(undefined, { year: "numeric", month: "long"});
     },
     eventsForDay(day: Date, limit: boolean = true): CalendarEvent[] {
-      const events = this.calendar.events
+      const events = (this.calendars as Calendar[]).flatMap(cal => cal.events)
         .filter(event => event.startDate.getDate() === day.getDate())
         .filter(event => event.startDate.getMonth() === day.getMonth())
         .filter(event => event.startDate.getFullYear() === day.getFullYear());
@@ -116,14 +116,14 @@ export default defineComponent({
       return events.slice(0, 3);
     },
     eventsForDayHasOverflow(day: Date): boolean {
-      const events = this.calendar.events
+      const events = (this.calendars as Calendar[]).flatMap(cal => cal.events)
         .filter(event => event.startDate.getDate() === day.getDate())
         .filter(event => event.startDate.getMonth() === day.getMonth())
         .filter(event => event.startDate.getFullYear() === day.getFullYear());
       return events.length > 4;
     },
     eventsForDayOverflowCount(day: Date): number {
-      return this.calendar.events
+      return (this.calendars as Calendar[]).flatMap(cal => cal.events)
         .filter(event => event.startDate.getDate() === day.getDate())
         .filter(event => event.startDate.getMonth() === day.getMonth())
         .filter(event => event.startDate.getFullYear() === day.getFullYear())

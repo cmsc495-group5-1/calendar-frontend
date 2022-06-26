@@ -6,7 +6,6 @@
 
 <script lang="ts">
 import { defineComponent } from "@vue/composition-api";
-import Calendar from "@/models/Calendar";
 import MonthBlock from '@/components/MonthBlock.vue';
 
 export default defineComponent({
@@ -18,10 +17,6 @@ export default defineComponent({
     return {};
   },
   props: {
-    calendar: {
-      type: Calendar,
-      required: true
-    },
     value: {
       type: String,
       required: false,
@@ -79,7 +74,6 @@ export default defineComponent({
 }
 
 .month {
-  width: 25%;
   border: 1px solid lightgray;
   border-collapse: collapse;
 }

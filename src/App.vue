@@ -2,8 +2,8 @@
   <VApp id="app">
     <VContainer fluid class="fill-height pa-0">
       <VRow fluid class="fill-height">
-        <VCol fluid cols="2"><AppSidebar /></VCol>
-        <VCol fluid cols="10" class="d-flex flex-column">
+        <VCol fluid cols="3" class="pt-0"><AppSidebar v-model="sidebarCalendars" @add-calendar="addCalendar" @edit-calendar="editCalendar" /></VCol>
+        <VCol fluid cols="9" class="d-flex flex-column">
           <div class="header">
             <VSelect :items="viewTypeItems" label="View" dense outlined hide-details class="fit-content" v-model="currentViewType">
             </VSelect>
@@ -14,15 +14,16 @@
             <div class="ml-auto">username here</div>
           </div>
 
-          <DayView class="pad-right" v-if="currentViewType == CurrentCalendarView.Day" v-model="displayDateString" :calendar="calendar" ref="currentView" :display-date="displayDate" @add-event="addEvent" @edit-event="editEvent" />
-          <WeekView class="pad-right" v-else-if="currentViewType == CurrentCalendarView.Week" v-model="displayDateString" :calendar="calendar" ref="currentView" :display-date="displayDate" @add-event="addEvent" @edit-event="editEvent" />
-          <MonthView class="pad-right" v-else-if="currentViewType == CurrentCalendarView.Month" v-model="displayDateString" :calendar="calendar" ref="currentView" :display-date="displayDate" @add-event="addEvent" @edit-event="editEvent" />
-          <YearView class="pad-right" v-else-if="currentViewType == CurrentCalendarView.Year" v-model="displayDateString" :calendar="calendar" ref="currentView" :display-date="displayDate" @add-event="addEvent" @edit-event="editEvent"
+          <DayView class="pad-right" v-if="currentViewType == CurrentCalendarView.Day" v-model="displayDateString" :calendars="filteredCalendars" ref="currentView" :display-date="displayDate" @add-event="addEvent" @edit-event="editEvent" />
+          <WeekView class="pad-right" v-else-if="currentViewType == CurrentCalendarView.Week" v-model="displayDateString" :calendars="filteredCalendars" ref="currentView" :display-date="displayDate" @add-event="addEvent" @edit-event="editEvent" />
+          <MonthView class="pad-right" v-else-if="currentViewType == CurrentCalendarView.Month" v-model="displayDateString" :calendars="filteredCalendars" ref="currentView" :display-date="displayDate" @add-event="addEvent" @edit-event="editEvent" />
+          <YearView class="pad-right" v-else-if="currentViewType == CurrentCalendarView.Year" v-model="displayDateString" ref="currentView" :display-date="displayDate" @add-event="addEvent" @edit-event="editEvent"
             @nav-to-day="navToDay" @nav-to-month="navToMonth" />
         </VCol>
       </VRow>
     </VContainer>
-    <EventEditDialog v-model="editing" :event="editingEvent" @cancel="editing = false" @save="saveEvent" @delete="deleteEvent" />
+    <EventEditDialog v-model="showEventEditor" :event="editingEvent" @cancel="showEventEditor = false" @save="saveEvent" @delete="deleteEvent" />
+    <CalendarEditDialog v-model="showCalendarEditor" :calendar="editingCalendar" @cancel="showCalendarEditor = false" @save="saveCalendar" @delete="deleteCalendar" />
   </VApp>
 </template>
 
@@ -36,6 +37,7 @@ import YearView from './views/YearView.vue';
 import CalendarEvent from './models/CalendarEvent';
 import Calendar from './models/Calendar';
 import EventEditDialog from "@/components/EventEditDialog.vue";
+import CalendarEditDialog from '@/components/CalendarEditEdialog.vue';
 
 const CurrentCalendarView = {
   Day: 'Day',
@@ -44,6 +46,26 @@ const CurrentCalendarView = {
   Year: 'Year'
 }
 
+const fakeEvent1 = new CalendarEvent("Test Event", new Date("Jun 30, 2022 13:01:23 EST"), new Date("Jun 30, 2022 14:00:00 EST"));
+fakeEvent1.id = 1;
+const fakeCalendars = [
+  {
+    calendar: new Calendar("My Cal 1", [
+      fakeEvent1,
+      new CalendarEvent("A really long title break somwhere", new Date("Jun 24, 2022 13:01:23 EST"), new Date("Jun 25, 2022 14:00:00 EST")),
+      new CalendarEvent("Test 2", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST"),
+        "Some location", "This is a very long description, I need it to run over the end of the view and get hidden or something like that"),
+      new CalendarEvent("Test 3", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST"),
+        "Some location 2", "This is a very long description, I need it to run over the end of the view and get hidden or something like that"),
+      new CalendarEvent("Test 4", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST")),
+      new CalendarEvent("Test 5", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST")),
+      new CalendarEvent("Test 6", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST")),
+      new CalendarEvent("Test 7", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST"))
+    ]),
+    selected: true
+  }
+];
+
 export default defineComponent({
   components: {
     AppSidebar,
@@ -51,39 +73,30 @@ export default defineComponent({
     WeekView,
     MonthView,
     YearView,
-    EventEditDialog
+    EventEditDialog,
+    CalendarEditDialog
   },
   props: {},
   setup() {
-    const event1 = new CalendarEvent("Test Event", new Date("Jun 30, 2022 13:01:23 EST"), new Date("Jun 30, 2022 14:00:00 EST"));
-    event1.id = 1;
-
     return {
-      calendar: new Calendar("My Cal 1", [
-        // TODO
-        event1,
-        new CalendarEvent("A really long title break somwhere", new Date("Jun 24, 2022 13:01:23 EST"), new Date("Jun 25, 2022 14:00:00 EST")),
-        new CalendarEvent("Test 2", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST"),
-          "Some location", "This is a very long description, I need it to run over the end of the view and get hidden or something like that"),
-        new CalendarEvent("Test 3", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST"),
-          "Some location 2", "This is a very long description, I need it to run over the end of the view and get hidden or something like that"),
-        new CalendarEvent("Test 4", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST")),
-        new CalendarEvent("Test 5", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST")),
-        new CalendarEvent("Test 6", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST")),
-        new CalendarEvent("Test 7", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST"))
-        ]),
+      sidebarCalendars: ref(fakeCalendars),
       currentViewType: CurrentCalendarView.Month,
       displayDate: ref(new Date()),
       displayDateString: "",
       CurrentCalendarView,
-      editing: false,
-      editingEvent: new CalendarEvent("", new Date(), new Date()) // Dummy value for type inference
+      showEventEditor: false,
+      editingEvent: new CalendarEvent("", new Date(), new Date()), // Dummy event
+      showCalendarEditor: false,
+      editingCalendar: new Calendar(""), // Dummy calendar
     }
   },
   computed: {
     viewTypeItems() {
       return Object.keys(CurrentCalendarView);
     },
+    filteredCalendars(): Calendar[] {
+      return this.sidebarCalendars.filter(c => c.selected).map(c => c.calendar);
+    }
   },
   methods: {
     navigateToToday() {
@@ -108,22 +121,38 @@ export default defineComponent({
       const endDate = new Date(day);
       endDate.setDate(endDate.getDate() + 1);
       this.editingEvent = new CalendarEvent(`Event on ${dayStr}`, day, endDate);
-      this.editing = true;
+      this.showEventEditor = true;
     },
     editEvent(event: CalendarEvent) {
       this.editingEvent = event;
-      this.editing = true;
+      this.showEventEditor = true;
     },
     saveEvent(event: CalendarEvent) {
       //if (!this.calendar.events.includes(event))
       //  this.calendar.events.push(event);
       // TODO: save calendar event
-      this.editing = false;
+      this.showEventEditor = false;
       console.log(event);
     },
     deleteEvent(event: CalendarEvent) {
-      this.editing = false;
+      this.showEventEditor = false;
       console.log(event);
+    },
+    addCalendar() {
+      this.editingCalendar = new Calendar("");
+      this.showCalendarEditor = true;
+    },
+    editCalendar(cal: Calendar) {
+      this.editingCalendar = cal;
+      this.showCalendarEditor = true;
+    },
+    saveCalendar(cal: Calendar) {
+      this.showCalendarEditor = false;
+      console.log(cal);
+    },
+    deleteCalendar(cal: Calendar) {
+      this.showCalendarEditor = false;
+      console.log(cal);
     }
   }
 })

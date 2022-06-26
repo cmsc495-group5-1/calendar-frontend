@@ -20,8 +20,8 @@ export default defineComponent({
     return {};
   },
   props: {
-    calendar: {
-      type: Calendar,
+    calendars: {
+      type: Array,
       required: true
     },
     value: {
@@ -39,7 +39,7 @@ export default defineComponent({
       return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric"});
     },
     eventsForDay(day: Date): CalendarEvent[] {
-      return this.calendar.events
+      return (this.calendars as Calendar[]).flatMap(cal => cal.events)
         .filter(event => event.startDate.getDate() === day.getDate())
         .filter(event => event.startDate.getMonth() === day.getMonth())
         .filter(event => event.startDate.getFullYear() === day.getFullYear());
