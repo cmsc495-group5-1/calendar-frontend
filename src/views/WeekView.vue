@@ -101,8 +101,7 @@ export default defineComponent({
       return (this.calendars as Calendar[]).flatMap(cal => cal.events)
         .filter(event => event.startDate.getDate() === day.getDate())
         .filter(event => event.startDate.getMonth() === day.getMonth())
-        .filter(event => event.startDate.getFullYear() === day.getFullYear())
-        .slice(0, 4);
+        .filter(event => event.startDate.getFullYear() === day.getFullYear());
     },
     isToday(day: Date): boolean {
       const today = new Date();
