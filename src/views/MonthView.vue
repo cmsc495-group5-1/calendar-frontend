@@ -1,16 +1,20 @@
 <template>
-  <div class="month">
-    <div v-for="day in getDayNames()" :key="day" class="day day-header">
-      {{ day }}
+  <div class="d-flex flex-column">
+    <div class="d-flex flex-wrap">
+      <div v-for="day in getDayNames()" :key="day" class="day day-header">
+        {{ day }}
+      </div>
     </div>
-    <template v-for="(date, dateIdx) in displayDates">
-      <template>
-        <div class="day" :key="dateIdx" @click="$emit('add-event', date)">
-          <div :class="isToday(date) ? 'current-day' : 'not-current-day'">{{date.getDate()}}</div>
-          <EventBubble v-for="(item, idx) in eventsForDay(date)" :key="idx" :event="item" @click.native.stop="$emit('edit-event', item)" />
-        </div>
+    <div class="month-grid">
+      <template v-for="(date, dateIdx) in displayDates">
+        <template>
+          <div class="day" :key="dateIdx" @click="$emit('add-event', date)">
+            <div :class="isToday(date) ? 'current-day' : 'not-current-day'">{{date.getDate()}}</div>
+            <EventBubble v-for="(item, idx) in eventsForDay(date)" :key="idx" :event="item" @click.native.stop="$emit('edit-event', item)" />
+          </div>
+        </template>
       </template>
-    </template>
+    </div>
   </div>
 </template>
 
@@ -115,18 +119,12 @@ export default defineComponent({
 </script>
 
 <style scoped lang="scss">
-.month {
-  display: flex;
-  flex-wrap: wrap;
-}
-
 .day {
   border: 1px solid lightgray;
   display: flex;
   flex-direction: column;
   align-content: center;
-  width: calc(100% / 7);
-  height: 6em;
+  overflow: hidden;
 }
 
 .current-day {
@@ -139,7 +137,16 @@ export default defineComponent({
 }
 
 .day-header {
+  width: calc(100% / 7);
   background-color: #efefef;
   height: fit-content;
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  /* TODO: 0.95 keeps it from overflowing but isn't the correct answer */
+  grid-auto-rows: 0.95fr;
+  max-height: 100%;
 }
 </style>
