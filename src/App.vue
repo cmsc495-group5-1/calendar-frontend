@@ -23,7 +23,7 @@
         </VCol>
       </VRow>
     </VContainer>
-    <EventEditDialog v-model="showEventEditor" :event="editingEvent" @cancel="showEventEditor = false" @save="saveEvent" @delete="deleteEvent" />
+    <EventEditDialog v-model="showEventEditor" :event="editingEvent" :calendars="filteredCalendars" @cancel="showEventEditor = false" @save="saveEvent" @delete="deleteEvent" />
     <CalendarEditDialog v-model="showCalendarEditor" :calendar="editingCalendar" @cancel="showCalendarEditor = false" @save="saveCalendar" @delete="deleteCalendar" />
   </VApp>
 </template>

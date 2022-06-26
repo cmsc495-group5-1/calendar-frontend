@@ -6,6 +6,9 @@
         <VContainer>
           <VRow>
             <VCol><VTextField label="Event Name *" required :value="event.name" /></VCol>
+            <VCol v-if="!event.id">
+              <VSelect :items="calendars" item-text="name" label="Calendar" dense outlined hide-details v-model="selectedCalendar" />
+            </VCol>
           </VRow>
           <VRow>
             <VCol>
@@ -43,6 +46,7 @@
 </template>
 
 <script lang="ts">
+import Calendar from "@/models/Calendar";
 import CalendarEvent from "@/models/CalendarEvent";
 import { defineComponent } from "@vue/composition-api";
 import ConfirmDialog from './ConfirmDialog.vue';
@@ -52,6 +56,7 @@ interface EventEditDialogData {
   endDate: Date;
   showConfirmDialog: boolean;
   confirmDialogText: string;
+  selectedCalendar: Calendar | null;
 }
 
 export default defineComponent({
@@ -68,6 +73,10 @@ export default defineComponent({
       type: Boolean,
       required: false,
       default: true
+    },
+    calendars: {
+      type: Array,
+      required: true
     }
   },
   setup(props): EventEditDialogData {
@@ -75,7 +84,8 @@ export default defineComponent({
       startDate: props.event.startDate,
       endDate: props.event.endDate,
       showConfirmDialog: false,
-      confirmDialogText: ""
+      confirmDialogText: "",
+      selectedCalendar: null
     };
   },
   watch: {
@@ -84,11 +94,18 @@ export default defineComponent({
       this.endDate = this.event.endDate;
     }
   },
+  mounted() {
+    if (this.selectedCalendar == null && this.calendars.length > 0) {
+      this.selectedCalendar = this.calendars[0] as Calendar;
+    }
+  },
   methods: {
     buildEvent(): CalendarEvent {
       const e = this.event;
       e.startDate = this.startDate;
       e.endDate = this.endDate;
+      if (this.selectedCalendar != null && e.calendar == null)
+        e.calendar = this.selectedCalendar;
       return e;
     },
     showConfirmDelete() {
