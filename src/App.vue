@@ -178,9 +178,6 @@ export default defineComponent({
   flex-direction: row;
   gap: 1rem;
   padding-bottom: 1rem;
-  padding-left: 0px;
-  padding-right: 0px;
-  padding-top: 1em;
 }
 
 .fit-content {
