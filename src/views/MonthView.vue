@@ -193,9 +193,6 @@ export default defineComponent({
 .event-expander {
   font-weight: bold;
   font-size: x-small;
-
-  width: 100%;
-  max-width: 100%;
 }
 
 .event-expander:hover {
