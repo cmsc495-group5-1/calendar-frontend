@@ -14,6 +14,21 @@
         </div>
       </template>
     </template>
+    <VDialog v-model="showMoreEventsDialog">
+      <VCard>
+        <VCardTitle>Events for {{showMoreEventsDay.toLocaleDateString()}}</VCardTitle>
+        <VCardText>
+          <VContainer>
+            <EventBubble style="margin-bottom: 10px" v-for="(item, idx) in showMoreEventsEventList" :key="idx" :event="item" @click.native.stop="$emit('edit-event', item)" />
+            <VBtn color="green darken-2" dark small @click="$emit('add-event', showMoreEventsDay)">Add new event</VBtn>
+          </VContainer>
+        </VCardText>
+        <VCardActions>
+          <VSpacer />
+        <VBtn color="blue darken-1" text @click="showMoreEventsDialog = false">Close</VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
   </div>
 </template>
 
@@ -30,7 +45,11 @@ export default defineComponent({
   },
   emits: [ "input", "add-event", "edit-event" ],
   setup() {
-    return {};
+    return {
+      showMoreEventsDialog: false,
+      showMoreEventsDay: new Date(),
+      showMoreEventsEventList: [] as CalendarEvent[]
+    };
   },
   props: {
     calendar: {
@@ -87,13 +106,13 @@ export default defineComponent({
     formatDate(date: Date): string {
       return date.toLocaleDateString(undefined, { year: "numeric", month: "long"});
     },
-    eventsForDay(day: Date): CalendarEvent[] {
+    eventsForDay(day: Date, limit: boolean = true): CalendarEvent[] {
       const events = this.calendar.events
         .filter(event => event.startDate.getDate() === day.getDate())
         .filter(event => event.startDate.getMonth() === day.getMonth())
         .filter(event => event.startDate.getFullYear() === day.getFullYear());
-      if (events.length > 4)
-        return events.slice(0, 3);
+      if (!limit)
+        return events;
       return events.slice(0, 3);
     },
     eventsForDayHasOverflow(day: Date): boolean {
@@ -122,7 +141,10 @@ export default defineComponent({
       return newDate;
     },
     showMoreEvents(day: Date) {
-      console.log(day);
+      const events = this.eventsForDay(day, false);
+      this.showMoreEventsEventList = events;
+      this.showMoreEventsDay = day;
+      this.showMoreEventsDialog = true;
     }
   },
   watch: {
