@@ -12,7 +12,7 @@
             <VBtn icon @click="navigateForward"><VIcon>mdi-chevron-right</VIcon></VBtn>
             <div>{{displayDateString}}</div>
             <div class="ml-auto">username here</div>
-            <VBtn outlined small @click="logout">Logout</VBtn>
+            <VBtn outlined small color="error" @click="logout">Logout</VBtn>
           </div>
 
           <DayView class="pad-right" v-if="currentViewType == CurrentCalendarView.Day" v-model="displayDateString" :calendars="filteredCalendars" ref="currentView" :display-date="displayDate" @add-event="addEvent" @edit-event="editEvent" />
