@@ -3,17 +3,19 @@
     <VToolbar flat color="green white--text">
       Calendar - Authentication Required
     </VToolbar>
-    <VContainer fluid class="fill-height d-flex justify-center align-center">
-      <LoginComponent v-if="currentView == CurrentLoginView.Login" @submit="$emit('login', $event)">
-        <template #additionalAction>
-          <VBtn color="primary" @click="currentView = CurrentLoginView.CreateAccount">No Account? Create One</VBtn>
-        </template>
-      </LoginComponent>
-      <CreateAccountComponent v-else @submit="$emit('create-account', $event)">
-        <template #additionalAction>
-          <VBtn color="primary" @click="currentView = CurrentLoginView.Login">Have Account? Login</VBtn>
-        </template>
-      </CreateAccountComponent>
+    <VContainer fluid class="fill-height d-flex justify-center align-center dark-background">
+      <VCard flat outlined>
+        <LoginComponent v-if="currentView == CurrentLoginView.Login" @submit="$emit('login', $event)">
+          <template #additionalAction>
+            <VBtn color="primary" @click="currentView = CurrentLoginView.CreateAccount">No Account? Create One</VBtn>
+          </template>
+        </LoginComponent>
+        <CreateAccountComponent v-else @submit="$emit('create-account', $event)">
+          <template #additionalAction>
+            <VBtn color="primary" @click="currentView = CurrentLoginView.Login">Have Account? Login</VBtn>
+          </template>
+        </CreateAccountComponent>
+      </VCard>
     </VContainer>
   </div>
 </template>
@@ -46,5 +48,9 @@ export default defineComponent({
 <style scoped lang="scss">
 .align-center {
   align-items: center;
+}
+
+.dark-background {
+  background-color: #AAA;
 }
 </style>
