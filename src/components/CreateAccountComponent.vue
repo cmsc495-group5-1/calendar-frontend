@@ -48,7 +48,7 @@
       </VRow>
       <VRow>
         <VCol>
-          <slot name="additionalAction" />
+          <slot name="additional-action" />
         </VCol>
         <VCol>
           <VBtn @click="submitCreateAccount">Create Account</VBtn>
