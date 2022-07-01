@@ -10,6 +10,7 @@ import CalendarEvent from "@/models/CalendarEvent";
 import EventBubble from "../components/EventBubble.vue";
 import { defineComponent } from "@vue/composition-api";
 import Calendar from "@/models/Calendar";
+import { filterEventsOccuringOnDay } from '@/util/FilterUtil';
 
 export default defineComponent({
   components: {
@@ -39,10 +40,7 @@ export default defineComponent({
       return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric"});
     },
     eventsForDay(day: Date): CalendarEvent[] {
-      return (this.calendars as Calendar[]).flatMap(cal => cal.events)
-        .filter(event => event.startDate.getDate() === day.getDate())
-        .filter(event => event.startDate.getMonth() === day.getMonth())
-        .filter(event => event.startDate.getFullYear() === day.getFullYear());
+      return filterEventsOccuringOnDay(this.calendars as Calendar[], day);
     },
     navigateBackward() {
       return this.navigateDays(-1);
