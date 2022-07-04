@@ -1,8 +1,21 @@
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 
 import Calendar from "@/models/Calendar";
 import CalendarEvent from "@/models/CalendarEvent";
 import User from "@/models/User";
+
+function jsonCleaner(key: any, value: any): any {
+  if (key == "calendar" || key == "events" || key == "calendars") {
+    return undefined;
+  }
+  return value;
+}
+
+function toJson(obj: any): string {
+  return JSON.stringify(obj, jsonCleaner);
+}
+
+const config: AxiosRequestConfig = { headers: {'Content-Type': 'application/json'} };
 
 // TODO
 const API_ROOT: string = process.env.VUE_APP_API_ROOT || "http://localhost:8080/api/";
@@ -77,7 +90,7 @@ export default class CalendarAPI {
       throw "Calendar ID cannot be null";
     }
     this.calendarCache[cal.id] = cal;
-    return await axios.put(buildUri("calendar", cal.id.toString()), cal);
+    return await axios.put(buildUri("calendar", cal.id.toString()), toJson(cal), config);
   }
 
   async deleteCalendar(cal: Calendar): Promise<boolean> {
@@ -89,7 +102,7 @@ export default class CalendarAPI {
   }
 
   async createCalendar(params: Calendar): Promise<Calendar> {
-    const cal = await axios.post(buildUri("calendar"), params) as Calendar;
+    const cal = await axios.post(buildUri("calendar"), toJson(params), config) as Calendar;
     this.calendarCache[cal.id!] = cal;
     return cal;
   }
@@ -123,7 +136,7 @@ export default class CalendarAPI {
       throw "Calendar id cannot be null";
     }
     this.eventCache[event.id] = event;
-    return await axios.put(buildUri("calendar", event.calendar.id.toString(), "event", event.id.toString()), event);
+    return await axios.put(buildUri("calendar", event.calendar.id.toString(), "event", event.id.toString()), toJson(event), config);
   }
 
   async deleteEvent(event: CalendarEvent): Promise<boolean> {
@@ -141,7 +154,7 @@ export default class CalendarAPI {
     if (cal.id == null) {
       throw "Calendar id cannot be null";
     }
-    const res = await axios.post(buildUri("calendar", cal.id.toString(), "event"), e) as CalendarEvent;
+    const res = await axios.post(buildUri("calendar", cal.id.toString(), "event"), toJson(e), config) as CalendarEvent;
     this.eventCache[res.id!] = res;
     return res;
   }

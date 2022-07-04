@@ -26,8 +26,8 @@
         </VCol>
       </VRow>
     </VContainer>
-    <EventEditDialog v-model="showEventEditor" :event="editingEvent" :calendars="filteredCalendars" @cancel="showEventEditor = false" @save="saveEvent" @delete="deleteEvent" />
-    <CalendarEditDialog v-model="showCalendarEditor" :calendar="editingCalendar" @cancel="showCalendarEditor = false" @save="saveCalendar" @delete="deleteCalendar" />
+    <EventEditDialog v-if="user" v-model="showEventEditor" :event="editingEvent" :calendars="filteredCalendars" @cancel="showEventEditor = false" @save="saveEvent" @delete="deleteEvent" />
+    <CalendarEditDialog v-if="user" v-model="showCalendarEditor" :calendar="editingCalendar" @cancel="showCalendarEditor = false" @save="saveCalendar" @delete="deleteCalendar" />
   </VApp>
 </template>
 
@@ -44,6 +44,7 @@ import EventEditDialog from "@/components/EventEditDialog.vue";
 import CalendarEditDialog from '@/components/CalendarEditEdialog.vue';
 import User, { UserLoginFormSubmission, UserCreationFormSubmission } from './models/User';
 import AuthenticationView from '@/views/AuthenticationView.vue';
+import CalendarAPI from './lib/CalendarAPI';
 
 const CurrentCalendarView = {
   Day: 'Day',
@@ -77,6 +78,9 @@ const fakeCalendars = [
     selected: true
   }
 ] as FilterableCalendar[];
+fakeCalendars[0].calendar.id = "guid";
+
+const api = new CalendarAPI();
 
 export default defineComponent({
   components: {
@@ -132,6 +136,7 @@ export default defineComponent({
     addEvent(day: Date) {
       const dayStr = day.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric"});
       const endDate = new Date(day);
+      endDate.setMinutes(-1);
       endDate.setDate(endDate.getDate() + 1);
       this.editingEvent = new CalendarEvent(`Event on ${dayStr}`, day, endDate);
       this.showEventEditor = true;
@@ -140,16 +145,33 @@ export default defineComponent({
       this.editingEvent = event;
       this.showEventEditor = true;
     },
-    saveEvent(event: CalendarEvent) {
-      //if (!this.calendar.events.includes(event))
-      //  this.calendar.events.push(event);
-      // TODO: save calendar event
-      this.showEventEditor = false;
-      console.log(event);
+    async saveEvent(event: CalendarEvent) {
+      try {
+        if (event.id) {
+          await api.createEvent(event.calendar!, event);
+          const cals = this.user?.calendars.filter(c => c == event.calendar);
+          if (cals != null && cals.length > 0) {
+            cals[0].events.push(event);
+          }
+        } else {
+          await api.updateEvent(event);
+          event.calendar?.events.push(event);
+        }
+        this.showEventEditor = false;
+      } catch (e) {
+        alert(e);
+      }
     },
-    deleteEvent(event: CalendarEvent) {
-      this.showEventEditor = false;
-      console.log(event);
+    async deleteEvent(event: CalendarEvent) {
+      try {
+        await api.deleteEvent(event);
+        this.filterableCalendars.flatMap(fc => fc.calendar).filter(cal => cal.events.includes(event)).forEach(cal => {
+          cal.events = cal.events.filter(e => event != e);
+        });
+        this.showEventEditor = false;
+      } catch (e) {
+        alert(e);
+      }
     },
     addCalendar() {
       this.editingCalendar = new Calendar("");
@@ -159,13 +181,38 @@ export default defineComponent({
       this.editingCalendar = cal;
       this.showCalendarEditor = true;
     },
-    saveCalendar(cal: Calendar) {
-      this.showCalendarEditor = false;
-      console.log(cal);
+    async saveCalendar(cal: Calendar) {
+      try {
+        if (cal.id) {
+          await api.updateCalendar(cal);
+          this.filterableCalendars.forEach(fc => {
+            if (fc.calendar.id == cal.id) {
+              fc.calendar.name = cal.name;
+            }
+          })
+        } else {
+          cal = await api.createCalendar(cal);
+          this.filterableCalendars.push({
+            calendar: cal,
+            selected: true
+          });
+        }
+        this.showCalendarEditor = false;
+      } catch (e) {
+        alert(e);
+      }
     },
-    deleteCalendar(cal: Calendar) {
+    async deleteCalendar(cal: Calendar) {
       this.showCalendarEditor = false;
-      console.log(cal);
+      try {
+        await api.deleteCalendar(cal);
+        this.filterableCalendars = this.filterableCalendars.filter(fc => {
+          if (fc.calendar == cal) return false;
+          return true;
+        });
+      } catch (e) {
+        alert(e);
+      }
     },
     logout() {
       // TODO: submit...
