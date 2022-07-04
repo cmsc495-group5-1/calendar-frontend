@@ -1,3 +1,4 @@
+import CalendarAPI from "@/lib/CalendarAPI";
 import Calendar from "./Calendar";
 
 export default class User {
@@ -12,6 +13,11 @@ export default class User {
     this.firstName = firstName;
     this.lastName = lastName;
     this.calendars = calendars || [];
+  }
+
+  async getCalendars(api: CalendarAPI) {
+    this.calendars = await api.getCalendars();
+    return this.calendars;
   }
 }
 

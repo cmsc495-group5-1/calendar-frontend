@@ -3,7 +3,9 @@
     <AuthenticationView v-if="user == null" @login="login" @create-account="createAccount" />
     <VContainer v-else fluid class="fill-height pa-0">
       <VRow fluid class="fill-height">
-        <VCol fluid class="pt-0 flex-grow-0"><AppSidebar v-model="sidebarCalendars" @add-calendar="addCalendar" @edit-calendar="editCalendar" /></VCol>
+        <VCol fluid class="pt-0 flex-grow-0">
+          <AppSidebar v-model="filterableCalendars" @add-calendar="addCalendar" @edit-calendar="editCalendar" />
+        </VCol>
         <VCol fluid class="d-flex flex-column mr-1em">
           <div class="header">
             <VSelect :items="viewTypeItems" label="View" dense outlined hide-details class="fit-content" v-model="currentViewType">
@@ -50,6 +52,11 @@ const CurrentCalendarView = {
   Year: 'Year'
 }
 
+type FilterableCalendar = {
+  calendar: Calendar,
+  selected: boolean;
+}
+
 const fakeEvent1 = new CalendarEvent("Test Event", new Date("Jun 30, 2022 13:01:23 EST"), new Date("Jun 30, 2022 14:00:00 EST"));
 fakeEvent1.id = '1';
 const fakeCalendars = [
@@ -69,10 +76,7 @@ const fakeCalendars = [
     ]),
     selected: true
   }
-];
-
-const user = new User("joe@email.host", "Joe", "Kebob");
-user.calendars = fakeCalendars.map(fake => fake.calendar);
+] as FilterableCalendar[];
 
 export default defineComponent({
   components: {
@@ -85,13 +89,12 @@ export default defineComponent({
     CalendarEditDialog,
     AuthenticationView
   },
-  props: {},
   setup() {
     return {
       CurrentCalendarView,
-      sidebarCalendars: ref(fakeCalendars),
       currentViewType: CurrentCalendarView.Month,
       displayDate: ref(new Date()),
+      filterableCalendars: ref([] as FilterableCalendar[]),
       displayDateString: "",
       showEventEditor: false,
       editingEvent: new CalendarEvent("", new Date(), new Date()), // Dummy event
@@ -105,7 +108,7 @@ export default defineComponent({
       return Object.keys(CurrentCalendarView);
     },
     filteredCalendars(): Calendar[] {
-      return this.sidebarCalendars.filter(c => c.selected).map(c => c.calendar);
+      return this.filterableCalendars.filter(c => c.selected).map(c => c.calendar);
     }
   },
   methods: {
@@ -171,6 +174,8 @@ export default defineComponent({
     login(obj: UserLoginFormSubmission) {
       // TODO: submit...
       this.user = new User(obj.email, "", "", fakeCalendars.map(f => f.calendar));
+      //this.user.getCalendars(api);
+      this.filterableCalendars = fakeCalendars;
     },
     createAccount(obj: UserCreationFormSubmission) {
       // TODO: submit...
