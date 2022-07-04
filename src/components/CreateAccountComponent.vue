@@ -1,60 +1,62 @@
 <template>
   <div>
-    <VContainer fluid>
-      <VRow>
-        <VCol>
-          <VTextField
-            label="Username"
-            v-model="username"
-            :rules="[rules.required, rules.email]"
-            />
-        </VCol>
-      </VRow>
-      <VRow>
-        <VCol>
-          <VTextField
-            label="First Name"
-            v-model="firstName"
-            :rules="[rules.required]"
-            />
-        </VCol>
-        <VCol>
-          <VTextField
-            label="Last Name"
-            v-model="lastName"
-            :rules="[rules.required]"
-            />
-        </VCol>
-      </VRow>
-      <VRow>
-        <VCol>
-          <VTextField label="Password"
-            v-model="password"
-            :rules="[rules.required, rules.passwordRequirements]"
-            :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-            :type="showPassword ? 'text' : 'password'"
-            @click:append="showPassword = !showPassword"
-            />
-        </VCol>
-        <VCol>
-          <VTextField label="Password Confirm"
-            v-model="passwordConfirm"
-            :rules="[rules.required, () => password == passwordConfirm || 'Passwords must match']"
-            :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-            :type="showPassword ? 'text' : 'password'"
-            @click:append="showPassword = !showPassword"
-            />
-        </VCol>
-      </VRow>
-      <VRow>
-        <VCol>
-          <slot name="additional-action" />
-        </VCol>
-        <VCol>
-          <VBtn @click="submitCreateAccount">Create Account</VBtn>
-        </VCol>
-      </VRow>
-    </VContainer>
+    <VForm ref="form">
+      <VContainer fluid>
+        <VRow>
+          <VCol>
+            <VTextField
+              label="Username"
+              v-model="username"
+              :rules="[rules.required, rules.email]"
+              />
+          </VCol>
+        </VRow>
+        <VRow>
+          <VCol>
+            <VTextField
+              label="First Name"
+              v-model="firstName"
+              :rules="[rules.required]"
+              />
+          </VCol>
+          <VCol>
+            <VTextField
+              label="Last Name"
+              v-model="lastName"
+              :rules="[rules.required]"
+              />
+          </VCol>
+        </VRow>
+        <VRow>
+          <VCol>
+            <VTextField label="Password"
+              v-model="password"
+              :rules="[rules.required, rules.passwordRequirements]"
+              :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+              :type="showPassword ? 'text' : 'password'"
+              @click:append="showPassword = !showPassword"
+              />
+          </VCol>
+          <VCol>
+            <VTextField label="Password Confirm"
+              v-model="passwordConfirm"
+              :rules="[rules.required, () => password == passwordConfirm || 'Passwords must match']"
+              :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+              :type="showPassword ? 'text' : 'password'"
+              @click:append="showPassword = !showPassword"
+              />
+          </VCol>
+        </VRow>
+        <VRow>
+          <VCol>
+            <slot name="additional-action" />
+          </VCol>
+          <VCol>
+            <VBtn @click="submitCreateAccount">Create Account</VBtn>
+          </VCol>
+        </VRow>
+      </VContainer>
+    </VForm>
   </div>
 </template>
 
@@ -89,6 +91,9 @@ export default defineComponent({
   },
   methods: {
     submitCreateAccount() {
+      if (!(this.$refs.form as any).validate()) {
+        return;
+      }
       this.$emit("submit", {
         email: this.username,
         password: this.password,
