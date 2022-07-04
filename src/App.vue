@@ -51,7 +51,7 @@ const CurrentCalendarView = {
 }
 
 const fakeEvent1 = new CalendarEvent("Test Event", new Date("Jun 30, 2022 13:01:23 EST"), new Date("Jun 30, 2022 14:00:00 EST"));
-fakeEvent1.id = 1;
+fakeEvent1.id = '1';
 const fakeCalendars = [
   {
     calendar: new Calendar("My Cal 1", [

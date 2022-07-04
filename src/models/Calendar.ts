@@ -1,7 +1,7 @@
 import CalendarEvent from "./CalendarEvent";
 
 export default class Calendar {
-  id?: number;
+  id?: string;
   name: string;
   events: CalendarEvent[];
 

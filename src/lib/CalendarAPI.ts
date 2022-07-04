@@ -13,8 +13,8 @@ function buildUri(...params: string[]): string {
 
 export default class CalendarAPI {
   user: User | null | undefined;
-  calendarCache: { [id: number]: Calendar };
-  eventCache: { [id: number]: CalendarEvent };
+  calendarCache: { [id: string]: Calendar };
+  eventCache: { [id: string]: CalendarEvent };
 
   constructor() {
     this.calendarCache = {};

@@ -1,7 +1,7 @@
 import Calendar from "./Calendar";
 
 export default class User {
-  id?: number;
+  id?: string;
   email: string;
   firstName: string;
   lastName: string;
