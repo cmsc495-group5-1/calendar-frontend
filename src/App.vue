@@ -201,26 +201,34 @@ export default defineComponent({
       }
     },
     async login(obj: UserLoginFormSubmission) {
-      if (await api.login(obj.email, obj.password)) {
-        this.user = api.getUserDetails()!;
-        this.filterableCalendars = (await this.user.getCalendars(api)).map(cal => ({
-          calendar: cal,
-          selected: true
-        }));
-      } else {
-        alert("Username or password incorrect");
+      try {
+        if (await api.login(obj.email, obj.password)) {
+          this.user = api.getUserDetails()!;
+          this.filterableCalendars = (await this.user.getCalendars(api)).map(cal => ({
+            calendar: cal,
+            selected: true
+          }));
+        } else {
+          alert("Username or password incorrect");
+        }
+      } catch (e) {
+        alert("Failed to login: " + e);
       }
     },
     async createAccount(obj: UserCreationFormSubmission) {
-      this.user = await api.createUser(obj);
-      const newCal = new Calendar(`${this.user.email}'s Primary Calendar`);
-      const realNewCal = api.createCalendar(newCal);
-      this.filterableCalendars = [
-        {
-          calendar: await realNewCal,
-          selected: true
-        }
-      ];
+      try {
+        this.user = await api.createUser(obj);
+        const newCal = new Calendar(`${this.user.email}'s Primary Calendar`);
+        const realNewCal = api.createCalendar(newCal);
+        this.filterableCalendars = [
+          {
+            calendar: await realNewCal,
+            selected: true
+          }
+        ];
+      } catch (e) {
+        alert("Failed to create account: " + e);
+      }
     }
   }
 })
