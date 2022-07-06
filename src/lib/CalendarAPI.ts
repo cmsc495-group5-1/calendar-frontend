@@ -18,7 +18,7 @@ function toJson(obj: any): string {
 const config: AxiosRequestConfig = { headers: {'Content-Type': 'application/json'} };
 
 // TODO
-const API_ROOT: string = process.env.VUE_APP_API_ROOT || "http://localhost:8080/api/";
+const API_ROOT: string = process.env.VUE_APP_API_ROOT || "http://api:8080/";
 
 function buildUri(...params: string[]): string {
   return [API_ROOT, ...params].join('/');
