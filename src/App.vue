@@ -1,6 +1,7 @@
 <template>
   <VApp id="app">
-    <VContainer fluid class="fill-height pa-0">
+    <AuthenticationView v-if="user == null" @login="login" @create-account="createAccount" />
+    <VContainer v-else fluid class="fill-height pa-0">
       <VRow fluid class="fill-height">
         <VCol fluid class="pt-0 flex-grow-0"><AppSidebar v-model="sidebarCalendars" @add-calendar="addCalendar" @edit-calendar="editCalendar" /></VCol>
         <VCol fluid class="d-flex flex-column mr-1em">
@@ -11,7 +12,7 @@
             <VBtn icon @click="navigateBackward"><VIcon>mdi-chevron-left</VIcon></VBtn>
             <VBtn icon @click="navigateForward"><VIcon>mdi-chevron-right</VIcon></VBtn>
             <div>{{displayDateString}}</div>
-            <div class="ml-auto">username here</div>
+            <div class="ml-auto ellipsize">{{ user.email }}</div>
             <VBtn outlined small color="error" @click="logout">Logout</VBtn>
           </div>
 
@@ -39,6 +40,8 @@ import CalendarEvent from './models/CalendarEvent';
 import Calendar from './models/Calendar';
 import EventEditDialog from "@/components/EventEditDialog.vue";
 import CalendarEditDialog from '@/components/CalendarEditEdialog.vue';
+import User, { UserLoginFormSubmission, UserCreationFormSubmission } from './models/User';
+import AuthenticationView from '@/views/AuthenticationView.vue';
 
 const CurrentCalendarView = {
   Day: 'Day',
@@ -68,6 +71,9 @@ const fakeCalendars = [
   }
 ];
 
+const user = new User("joe@email.host", "Joe", "Kebob");
+user.calendars = fakeCalendars.map(fake => fake.calendar);
+
 export default defineComponent({
   components: {
     AppSidebar,
@@ -76,20 +82,22 @@ export default defineComponent({
     MonthView,
     YearView,
     EventEditDialog,
-    CalendarEditDialog
+    CalendarEditDialog,
+    AuthenticationView
   },
   props: {},
   setup() {
     return {
+      CurrentCalendarView,
       sidebarCalendars: ref(fakeCalendars),
       currentViewType: CurrentCalendarView.Month,
       displayDate: ref(new Date()),
       displayDateString: "",
-      CurrentCalendarView,
       showEventEditor: false,
       editingEvent: new CalendarEvent("", new Date(), new Date()), // Dummy event
       showCalendarEditor: false,
       editingCalendar: new Calendar(""), // Dummy calendar
+      user: undefined as User | undefined
     }
   },
   computed: {
@@ -157,7 +165,16 @@ export default defineComponent({
       console.log(cal);
     },
     logout() {
-
+      // TODO: submit...
+      this.user = undefined;
+    },
+    login(obj: UserLoginFormSubmission) {
+      // TODO: submit...
+      this.user = new User(obj.email, "", "", fakeCalendars.map(f => f.calendar));
+    },
+    createAccount(obj: UserCreationFormSubmission) {
+      // TODO: submit...
+      this.user = new User(obj.email, obj.firstName, obj.lastName, fakeCalendars.map(f => f.calendar));
     }
   }
 })
@@ -171,6 +188,12 @@ export default defineComponent({
   text-align: center;
   color: #2c3e50;
   width: 100%;
+}
+
+.ellipsize {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .header {
