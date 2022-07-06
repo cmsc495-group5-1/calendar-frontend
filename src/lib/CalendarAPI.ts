@@ -5,6 +5,8 @@ import CalendarEvent from "@/models/CalendarEvent";
 import User from "@/models/User";
 
 function jsonCleaner(key: any, value: any): any {
+  // Remove the pseudo-elements that are stored in the model
+  // classes here, but should not be serialized back to the API
   if (key == "calendar" || key == "events" || key == "calendars") {
     return undefined;
   }
