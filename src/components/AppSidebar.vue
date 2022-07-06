@@ -41,6 +41,9 @@ export default defineComponent({
   computed: {
     // ...
     calendarsTyped() {
+      if (this.value == null) {
+        return [] as SidebarCalendar[];
+      }
       const data = this.value as Array<SidebarCalendar>;
       return data;
     }

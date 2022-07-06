@@ -5,7 +5,7 @@
       <VCardText>
         <VContainer>
           <VRow>
-            <VCol><VTextField label="Calendar Name *" required :value="calendar.name" /></VCol>
+            <VCol><VTextField label="Calendar Name *" required v-model="calName" /></VCol>
           </VRow>
         </VContainer>
         <small>*indicates required field</small>
@@ -14,7 +14,7 @@
         <VSpacer />
         <VBtn v-if="calendar.id" color="red darken-1" text @click="showConfirmDelete">Delete</VBtn>
         <VBtn color="blue darken-1" text @click="$emit('cancel')">Cancel</VBtn>
-        <VBtn color="blue darken-1" text @click="$emit('save', calendar)">Save</VBtn>
+        <VBtn color="blue darken-1" text @click="$emit('save', buildCalendar())">Save</VBtn>
       </VCardActions>
     </VCard>
     <ConfirmDialog v-model="showConfirmDialog" action="Delete" :text="confirmDialogText"
@@ -30,6 +30,7 @@ import ConfirmDialog from './ConfirmDialog.vue';
 interface CalEditDialogData {
   showConfirmDialog: boolean;
   confirmDialogText: string;
+  calName: string;
 }
 
 export default defineComponent({
@@ -51,7 +52,8 @@ export default defineComponent({
   setup(): CalEditDialogData {
     return {
       showConfirmDialog: false,
-      confirmDialogText: ""
+      confirmDialogText: "",
+      calName: "",
     };
   },
   methods: {
@@ -62,6 +64,16 @@ export default defineComponent({
     confirmDelete() {
       this.showConfirmDialog = false;
       this.$emit('delete', this.calendar);
+    },
+    buildCalendar() {
+      const cal = this.calendar;
+      cal.name = this.calName;
+      return cal;
+    }
+  },
+  watch: {
+    calendar(newCal: Calendar) {
+      this.calName = newCal.name;
     }
   }
 })
