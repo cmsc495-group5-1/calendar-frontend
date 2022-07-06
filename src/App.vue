@@ -58,28 +58,6 @@ type FilterableCalendar = {
   selected: boolean;
 }
 
-const fakeEvent1 = new CalendarEvent("Test Event", new Date("Jun 30, 2022 13:01:23 EST"), new Date("Jun 30, 2022 14:00:00 EST"));
-fakeEvent1.id = '1';
-const fakeCalendars = [
-  {
-    calendar: new Calendar("My Cal 1", [
-      fakeEvent1,
-      new CalendarEvent("A really long title break somwhere", new Date("Jun 24, 2022 13:01:23 EST"), new Date("Jun 26, 2022 14:00:00 EST")),
-      new CalendarEvent("Test 2", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST"),
-        "Some location", "This is a very long description, I need it to run over the end of the view and get hidden or something like that"),
-      new CalendarEvent("Test 3", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST"),
-        "Some location 2", "This is a very long description, I need it to run over the end of the view and get hidden or something like that"),
-      new CalendarEvent("Test 4", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST")),
-      new CalendarEvent("Test 5", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST")),
-      new CalendarEvent("Test 6", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST")),
-      new CalendarEvent("Test 7", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST")),
-      new CalendarEvent("Single Day Event", new Date("Jun 18, 2022 00:00:00 EDT"), new Date("Jun 18, 2022 23:59:59 EDT"))
-    ]),
-    selected: true
-  }
-] as FilterableCalendar[];
-fakeCalendars[0].calendar.id = "guid";
-
 const api = new CalendarAPI();
 
 export default defineComponent({
@@ -215,18 +193,34 @@ export default defineComponent({
       }
     },
     logout() {
-      // TODO: submit...
-      this.user = undefined;
+      if (api.logout()) {
+        this.user = undefined;
+        this.filterableCalendars = [];
+      } else {
+        alert("Failed to log out");
+      }
     },
-    login(obj: UserLoginFormSubmission) {
-      // TODO: submit...
-      this.user = new User(obj.email, "", "", fakeCalendars.map(f => f.calendar));
-      //this.user.getCalendars(api);
-      this.filterableCalendars = fakeCalendars;
+    async login(obj: UserLoginFormSubmission) {
+      if (await api.login(obj.email, obj.password)) {
+        this.user = api.user!;
+        this.filterableCalendars = (await this.user.getCalendars(api)).map(cal => ({
+          calendar: cal,
+          selected: true
+        }));
+      } else {
+        alert("Username or password incorrect");
+      }
     },
-    createAccount(obj: UserCreationFormSubmission) {
-      // TODO: submit...
-      this.user = new User(obj.email, obj.firstName, obj.lastName, fakeCalendars.map(f => f.calendar));
+    async createAccount(obj: UserCreationFormSubmission) {
+      this.user = await api.createUser(obj);
+      const newCal = new Calendar(`${this.user.email}'s Primary Calendar`);
+      const realNewCal = api.createCalendar(newCal);
+      this.filterableCalendars = [
+        {
+          calendar: await realNewCal,
+          selected: true
+        }
+      ];
     }
   }
 })
