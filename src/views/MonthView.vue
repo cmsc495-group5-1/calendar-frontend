@@ -38,6 +38,7 @@ import EventBubble from "../components/EventBubble.vue";
 import { defineComponent } from "@vue/composition-api";
 import Calendar from "@/models/Calendar";
 import { getDayNames, isToday } from '@/util/DateUtils';
+import { filterEventsOccuringOnDay } from '@/util/FilterUtil';
 
 export default defineComponent({
   components: {
@@ -107,27 +108,17 @@ export default defineComponent({
       return date.toLocaleDateString(undefined, { year: "numeric", month: "long"});
     },
     eventsForDay(day: Date, limit: boolean = true): CalendarEvent[] {
-      const events = (this.calendars as Calendar[]).flatMap(cal => cal.events)
-        .filter(event => event.startDate.getDate() === day.getDate())
-        .filter(event => event.startDate.getMonth() === day.getMonth())
-        .filter(event => event.startDate.getFullYear() === day.getFullYear());
+      const events = filterEventsOccuringOnDay(this.calendars as Calendar[], day);
       if (!limit)
         return events;
       return events.slice(0, 3);
     },
     eventsForDayHasOverflow(day: Date): boolean {
-      const events = (this.calendars as Calendar[]).flatMap(cal => cal.events)
-        .filter(event => event.startDate.getDate() === day.getDate())
-        .filter(event => event.startDate.getMonth() === day.getMonth())
-        .filter(event => event.startDate.getFullYear() === day.getFullYear());
+      const events = filterEventsOccuringOnDay(this.calendars as Calendar[], day);
       return events.length > 4;
     },
     eventsForDayOverflowCount(day: Date): number {
-      return (this.calendars as Calendar[]).flatMap(cal => cal.events)
-        .filter(event => event.startDate.getDate() === day.getDate())
-        .filter(event => event.startDate.getMonth() === day.getMonth())
-        .filter(event => event.startDate.getFullYear() === day.getFullYear())
-        .length - 4;
+      return filterEventsOccuringOnDay(this.calendars as Calendar[], day).length - 4;
     },
     navigateBackward() {
       return this.navigateMonths(-1);
