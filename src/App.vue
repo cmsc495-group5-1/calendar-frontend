@@ -202,7 +202,7 @@ export default defineComponent({
     },
     async login(obj: UserLoginFormSubmission) {
       if (await api.login(obj.email, obj.password)) {
-        this.user = api.user!;
+        this.user = api.getUserDetails()!;
         this.filterableCalendars = (await this.user.getCalendars(api)).map(cal => ({
           calendar: cal,
           selected: true
