@@ -1,8 +1,11 @@
 <template>
   <VApp id="app">
-    <VContainer fluid class="fill-height pa-0">
+    <AuthenticationView v-if="user == null" @login="login" @create-account="createAccount" />
+    <VContainer v-else fluid class="fill-height pa-0">
       <VRow fluid class="fill-height">
-        <VCol fluid class="pt-0 flex-grow-0"><AppSidebar v-model="sidebarCalendars" @add-calendar="addCalendar" @edit-calendar="editCalendar" /></VCol>
+        <VCol fluid class="pt-0 flex-grow-0">
+          <AppSidebar v-model="filterableCalendars" @add-calendar="addCalendar" @edit-calendar="editCalendar" />
+        </VCol>
         <VCol fluid class="d-flex flex-column mr-1em">
           <div class="header">
             <VSelect :items="viewTypeItems" label="View" dense outlined hide-details class="fit-content" v-model="currentViewType">
@@ -11,7 +14,7 @@
             <VBtn icon @click="navigateBackward"><VIcon>mdi-chevron-left</VIcon></VBtn>
             <VBtn icon @click="navigateForward"><VIcon>mdi-chevron-right</VIcon></VBtn>
             <div>{{displayDateString}}</div>
-            <div class="ml-auto">username here</div>
+            <div class="ml-auto ellipsize">{{ user.email }}</div>
             <VBtn outlined small color="error" @click="logout">Logout</VBtn>
           </div>
 
@@ -23,8 +26,8 @@
         </VCol>
       </VRow>
     </VContainer>
-    <EventEditDialog v-model="showEventEditor" :event="editingEvent" :calendars="filteredCalendars" @cancel="showEventEditor = false" @save="saveEvent" @delete="deleteEvent" />
-    <CalendarEditDialog v-model="showCalendarEditor" :calendar="editingCalendar" @cancel="showCalendarEditor = false" @save="saveCalendar" @delete="deleteCalendar" />
+    <EventEditDialog v-if="user" v-model="showEventEditor" :event="editingEvent" :calendars="filteredCalendars" @cancel="showEventEditor = false" @save="saveEvent" @delete="deleteEvent" />
+    <CalendarEditDialog v-if="user" v-model="showCalendarEditor" :calendar="editingCalendar" @cancel="showCalendarEditor = false" @save="saveCalendar" @delete="deleteCalendar" />
   </VApp>
 </template>
 
@@ -39,6 +42,9 @@ import CalendarEvent from './models/CalendarEvent';
 import Calendar from './models/Calendar';
 import EventEditDialog from "@/components/EventEditDialog.vue";
 import CalendarEditDialog from '@/components/CalendarEditEdialog.vue';
+import User, { UserLoginFormSubmission, UserCreationFormSubmission } from './models/User';
+import AuthenticationView from '@/views/AuthenticationView.vue';
+import CalendarAPI from './lib/CalendarAPI';
 
 const CurrentCalendarView = {
   Day: 'Day',
@@ -47,25 +53,12 @@ const CurrentCalendarView = {
   Year: 'Year'
 }
 
-const fakeEvent1 = new CalendarEvent("Test Event", new Date("Jun 30, 2022 13:01:23 EST"), new Date("Jun 30, 2022 14:00:00 EST"));
-fakeEvent1.id = 1;
-const fakeCalendars = [
-  {
-    calendar: new Calendar("My Cal 1", [
-      fakeEvent1,
-      new CalendarEvent("A really long title break somwhere", new Date("Jun 24, 2022 13:01:23 EST"), new Date("Jun 25, 2022 14:00:00 EST")),
-      new CalendarEvent("Test 2", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST"),
-        "Some location", "This is a very long description, I need it to run over the end of the view and get hidden or something like that"),
-      new CalendarEvent("Test 3", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST"),
-        "Some location 2", "This is a very long description, I need it to run over the end of the view and get hidden or something like that"),
-      new CalendarEvent("Test 4", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST")),
-      new CalendarEvent("Test 5", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST")),
-      new CalendarEvent("Test 6", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST")),
-      new CalendarEvent("Test 7", new Date("Jun 3, 2022 13:01:23 EST"), new Date("Jun 3, 2022 14:00:00 EST"))
-    ]),
-    selected: true
-  }
-];
+type FilterableCalendar = {
+  calendar: Calendar,
+  selected: boolean;
+}
+
+const api = new CalendarAPI();
 
 export default defineComponent({
   components: {
@@ -75,20 +68,21 @@ export default defineComponent({
     MonthView,
     YearView,
     EventEditDialog,
-    CalendarEditDialog
+    CalendarEditDialog,
+    AuthenticationView
   },
-  props: {},
   setup() {
     return {
-      sidebarCalendars: ref(fakeCalendars),
+      CurrentCalendarView,
       currentViewType: CurrentCalendarView.Month,
       displayDate: ref(new Date()),
+      filterableCalendars: ref([] as FilterableCalendar[]),
       displayDateString: "",
-      CurrentCalendarView,
       showEventEditor: false,
       editingEvent: new CalendarEvent("", new Date(), new Date()), // Dummy event
       showCalendarEditor: false,
       editingCalendar: new Calendar(""), // Dummy calendar
+      user: undefined as User | undefined
     }
   },
   computed: {
@@ -96,7 +90,7 @@ export default defineComponent({
       return Object.keys(CurrentCalendarView);
     },
     filteredCalendars(): Calendar[] {
-      return this.sidebarCalendars.filter(c => c.selected).map(c => c.calendar);
+      return this.filterableCalendars.filter(c => c.selected).map(c => c.calendar);
     }
   },
   methods: {
@@ -120,6 +114,7 @@ export default defineComponent({
     addEvent(day: Date) {
       const dayStr = day.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric"});
       const endDate = new Date(day);
+      endDate.setMinutes(-1);
       endDate.setDate(endDate.getDate() + 1);
       this.editingEvent = new CalendarEvent(`Event on ${dayStr}`, day, endDate);
       this.showEventEditor = true;
@@ -128,16 +123,33 @@ export default defineComponent({
       this.editingEvent = event;
       this.showEventEditor = true;
     },
-    saveEvent(event: CalendarEvent) {
-      //if (!this.calendar.events.includes(event))
-      //  this.calendar.events.push(event);
-      // TODO: save calendar event
-      this.showEventEditor = false;
-      console.log(event);
+    async saveEvent(event: CalendarEvent) {
+      try {
+        if (event.id) {
+          await api.createEvent(event.calendar!, event);
+          const cals = this.user?.calendars.filter(c => c == event.calendar);
+          if (cals != null && cals.length > 0) {
+            cals[0].events.push(event);
+          }
+        } else {
+          await api.updateEvent(event);
+          event.calendar?.events.push(event);
+        }
+        this.showEventEditor = false;
+      } catch (e) {
+        alert(e);
+      }
     },
-    deleteEvent(event: CalendarEvent) {
-      this.showEventEditor = false;
-      console.log(event);
+    async deleteEvent(event: CalendarEvent) {
+      try {
+        await api.deleteEvent(event);
+        this.filterableCalendars.flatMap(fc => fc.calendar).filter(cal => cal.events.includes(event)).forEach(cal => {
+          cal.events = cal.events.filter(e => event != e);
+        });
+        this.showEventEditor = false;
+      } catch (e) {
+        alert(e);
+      }
     },
     addCalendar() {
       this.editingCalendar = new Calendar("");
@@ -147,16 +159,76 @@ export default defineComponent({
       this.editingCalendar = cal;
       this.showCalendarEditor = true;
     },
-    saveCalendar(cal: Calendar) {
-      this.showCalendarEditor = false;
-      console.log(cal);
+    async saveCalendar(cal: Calendar) {
+      try {
+        if (cal.id) {
+          await api.updateCalendar(cal);
+          this.filterableCalendars.forEach(fc => {
+            if (fc.calendar.id == cal.id) {
+              fc.calendar.name = cal.name;
+            }
+          })
+        } else {
+          cal = await api.createCalendar(cal);
+          this.filterableCalendars.push({
+            calendar: cal,
+            selected: true
+          });
+        }
+        this.showCalendarEditor = false;
+      } catch (e) {
+        alert(e);
+      }
     },
-    deleteCalendar(cal: Calendar) {
+    async deleteCalendar(cal: Calendar) {
       this.showCalendarEditor = false;
-      console.log(cal);
+      try {
+        await api.deleteCalendar(cal);
+        this.filterableCalendars = this.filterableCalendars.filter(fc => {
+          if (fc.calendar == cal) return false;
+          return true;
+        });
+      } catch (e) {
+        alert(e);
+      }
     },
     logout() {
-
+      if (api.logout()) {
+        this.user = undefined;
+        this.filterableCalendars = [];
+      } else {
+        alert("Failed to log out");
+      }
+    },
+    async login(obj: UserLoginFormSubmission) {
+      try {
+        if (await api.login(obj.email, obj.password)) {
+          this.user = api.getUserDetails()!;
+          this.filterableCalendars = (await this.user.getCalendars(api)).map(cal => ({
+            calendar: cal,
+            selected: true
+          }));
+        } else {
+          alert("Username or password incorrect");
+        }
+      } catch (e) {
+        alert("Failed to login: " + e);
+      }
+    },
+    async createAccount(obj: UserCreationFormSubmission) {
+      try {
+        this.user = await api.createUser(obj);
+        const newCal = new Calendar(`${this.user.email}'s Primary Calendar`);
+        const realNewCal = api.createCalendar(newCal);
+        this.filterableCalendars = [
+          {
+            calendar: await realNewCal,
+            selected: true
+          }
+        ];
+      } catch (e) {
+        alert("Failed to create account: " + e);
+      }
     }
   }
 })
@@ -170,6 +242,12 @@ export default defineComponent({
   text-align: center;
   color: #2c3e50;
   width: 100%;
+}
+
+.ellipsize {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .header {
