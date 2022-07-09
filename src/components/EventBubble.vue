@@ -1,6 +1,6 @@
 <template>
   <div class="event ellipsize">
-    {{ event.name }}
+    {{ event.eventName }}
     <div v-if="expanded" class="subtext">
       <div v-if="event.location" class="ellipsize">{{event.location}}</div>
       <div v-if="event.description" class="ellipsize flex-right">{{event.description}}</div>

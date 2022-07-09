@@ -20,7 +20,7 @@ function toJson(obj: any): string {
 const config: AxiosRequestConfig = { headers: {'Content-Type': 'application/json'} };
 
 // TODO
-const API_ROOT: string = process.env.VUE_APP_API_ROOT || "http://api:8080/";
+const API_ROOT: string = process.env.VUE_APP_API_ROOT || "http://localhost:8080/api";
 
 function buildUri(...params: string[]): string {
   return [API_ROOT, ...params].join('/');
@@ -41,17 +41,29 @@ export default class CalendarAPI {
   }
 
   async login(username: string, password: string): Promise<boolean> {
-    const result = await axios.post(buildUri("login"), {
+    this.user = new User("poopoo@peepee.com", "poo", "pee", undefined);
+    this.user.id = "2c92808381dfa4460181dfb1130e0009";
+    return true;
+
+    const result = (await axios.post(buildUri("login"), {
       username,
       password
-    }) as User;
+    })).data as User;
     this.user = result;
     return true;
   }
 
   async createUser(params: object): Promise<User> {
-    const result = await axios.post(buildUri("login/newuser"), params) as User;
-    this.user = result;
+    const result = (await axios.post(buildUri("user"), params)).data;
+    const user = new User(result.email, result.firstName, result.lastName);
+    user.id = result.userId;
+    this.user = user;
+    if (result.calendarIds != null) {
+      for (let id of result.calendarIds.split(",")) {
+        id = id.replace("[", "").replace("]", "").trim();
+        user.calendars.push(await this.getCalendar(id));
+      }
+    }
     return this.user;
   }
 
@@ -73,91 +85,107 @@ export default class CalendarAPI {
   }
 
   async getCalendars(): Promise<Calendar[]> {
-    const calendars = await axios.get(buildUri("calendar")) as Calendar[];
-    calendars.forEach(c => this.calendarCache[c.id!] = c);
+    const calendarsRaw = (await axios.get(buildUri("calendar", "all", this.user!.id!))).data;
+    const calendars: Calendar[] = [];
+    for (const calRaw of calendarsRaw) {
+      calendars.push(await this.getCalendar(calRaw.calendarId));
+    }
     return calendars;
   }
 
-  async getCalendar(id: number): Promise<Calendar> {
+  async getCalendar(id: string): Promise<Calendar> {
     if (id in this.calendarCache) {
       return this.calendarCache[id];
     }
-    const cal = await axios.get(buildUri("calendar", id.toString())) as Calendar;
-    this.calendarCache[cal.id!] = cal;
+    const calObject = (await axios.get(buildUri("calendar", id.toString()))).data;
+    const cal = new Calendar(calObject.name);
+    cal.calendarId = calObject.calendarId;
+    if (calObject.eventIds != null) {
+      for (let id of calObject.eventIds.split(",")) {
+        id = id.replace("[", "").replace("]", "").trim();
+        cal.events.push(await this.getEvent(cal, id));
+      }
+    }
+    this.calendarCache[cal.calendarId!] = cal;
+    if (!(this.user!.calendars!.filter(c => c.calendarId == id).length > 0)) {
+      this.user!.calendars.push(cal);
+    }
     return cal;
   }
 
   async updateCalendar(cal: Calendar): Promise<boolean> {
-    if (cal.id == null) {
+    if (cal.calendarId == null) {
       throw "Calendar ID cannot be null";
     }
-    this.calendarCache[cal.id] = cal;
-    return await axios.put(buildUri("calendar", cal.id.toString()), toJson(cal), config);
+    this.calendarCache[cal.calendarId] = cal;
+    return (await axios.put(buildUri("calendar", cal.calendarId.toString()), toJson(cal), config)).status == 200;
   }
 
   async deleteCalendar(cal: Calendar): Promise<boolean> {
-    if (cal.id == null) {
+    if (cal.calendarId == null) {
       throw "Calendar ID cannot be null";
     }
-    delete this.calendarCache[cal.id];
-    return await axios.delete(buildUri("calendar", cal.id.toString()));
+    delete this.calendarCache[cal.calendarId];
+    return (await axios.delete(buildUri("calendar", cal.calendarId.toString()))).status == 200;
   }
 
   async createCalendar(params: Calendar): Promise<Calendar> {
-    const cal = await axios.post(buildUri("calendar"), toJson(params), config) as Calendar;
-    this.calendarCache[cal.id!] = cal;
+    const calRaw = (await axios.post(buildUri("calendar", this.user!.id!), toJson(params), config)).data;
+    const cal = await this.getCalendar(calRaw.calendarId);
+    this.calendarCache[cal.calendarId!] = cal;
     return cal;
   }
 
   async getEventsForCalendar(cal: Calendar): Promise<CalendarEvent[]> {
-    if (cal.id == null) {
+    if (cal.calendarId == null) {
       throw "Calendar ID cannot be null";
     }
-    const events = await axios.get(buildUri("calendar", cal.id.toString())) as CalendarEvent[];
-    events.forEach(e => this.eventCache[e.id!] = e);
+    const events = (await axios.get(buildUri("calendar", cal.calendarId.toString()))).data as CalendarEvent[];
+    events.forEach(e => this.eventCache[e.eventId!] = e);
     return events;
   }
 
-  async getEvent(cal: Calendar, id: number): Promise<CalendarEvent> {
-    if (cal.id == null) {
+  async getEvent(cal: Calendar, id: string): Promise<CalendarEvent> {
+    if (cal.calendarId == null) {
       throw "Calendar id cannot be null";
     }
     if (id in this.eventCache) {
       return this.eventCache[id];
     }
-    const event = await axios.get(buildUri("calendar", cal.id.toString(), "event", id.toString())) as CalendarEvent;
-    this.eventCache[event.id!] = event;
+    const eventRaw = (await axios.get(buildUri("calendar", cal.calendarId.toString(), "event", id.toString()))).data;
+    const event = new CalendarEvent(eventRaw.eventName, eventRaw.startDateTime, eventRaw.endDateTime, eventRaw.location, eventRaw.description);
+    event.eventId = eventRaw.eventId;
+    this.eventCache[event.eventId!] = event;
     return event;
   }
 
   async updateEvent(event: CalendarEvent): Promise<boolean> {
-    if (event.id == null) {
+    if (event.eventId == null) {
       throw "Event id cannot be null";
     }
-    if (event.calendar?.id == null) {
+    if (event.calendar?.calendarId == null) {
       throw "Calendar id cannot be null";
     }
-    this.eventCache[event.id] = event;
-    return await axios.put(buildUri("calendar", event.calendar.id.toString(), "event", event.id.toString()), toJson(event), config);
+    this.eventCache[event.eventId] = event;
+    return (await axios.put(buildUri("calendar", event.calendar.calendarId.toString(), "event", event.eventId.toString()), toJson(event), config)).data;
   }
 
   async deleteEvent(event: CalendarEvent): Promise<boolean> {
-    if (event.id == null) {
+    if (event.eventId == null) {
       throw "Event id cannot be null";
     }
-    if (event.calendar?.id == null) {
+    if (event.calendar?.calendarId == null) {
       throw "Calendar id cannot be null";
     }
-    delete this.eventCache[event.id];
-    return await axios.delete(buildUri("calendar", event.calendar.id.toString(), "event", event.id.toString()));
+    delete this.eventCache[event.eventId];
+    return (await axios.delete(buildUri("calendar", event.calendar.calendarId.toString(), "event", event.eventId.toString()))).status == 200;
   }
 
   async createEvent(cal: Calendar, e: CalendarEvent): Promise<CalendarEvent> {
-    if (cal.id == null) {
+    if (cal.calendarId == null) {
       throw "Calendar id cannot be null";
     }
-    const res = await axios.post(buildUri("calendar", cal.id.toString(), "event"), toJson(e), config) as CalendarEvent;
-    this.eventCache[res.id!] = res;
-    return res;
+    const eventRaw = (await axios.post(buildUri("calendar", cal.calendarId.toString(), "event"), toJson(e), config)).data;
+    return await this.getEvent(cal, eventRaw.eventId);
   }
 }
