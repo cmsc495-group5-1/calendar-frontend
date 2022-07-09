@@ -28,6 +28,22 @@
     </VContainer>
     <EventEditDialog v-if="user" v-model="showEventEditor" :event="editingEvent" :calendars="filteredCalendars" @cancel="showEventEditor = false" @save="saveEvent" @delete="deleteEvent" />
     <CalendarEditDialog v-if="user" v-model="showCalendarEditor" :calendar="editingCalendar" @cancel="showCalendarEditor = false" @save="saveCalendar" @delete="deleteCalendar" />
+    <VDialog :value="showNotificationPopup" width="500">
+      <VCard>
+        <VCardTitle class="text-h5 grey lighten-2">Upcoming Event</VCardTitle>
+        <VCardText>
+            Event is starting: {{ notificationEventTitle }}
+            <div v-if="notificationEventLocation.length > 0">
+              At {{ notificationEventLocation }}
+            </div>
+        </VCardText>
+        <VDivider></VDivider>
+        <VCardActions>
+          <VSpacer></VSpacer>
+          <VBtn color="primary" text @click="popNotification">Ok</VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
   </VApp>
 </template>
 
@@ -59,6 +75,8 @@ type FilterableCalendar = {
 }
 
 const api = new CalendarAPI();
+let notificationTimer: number | null = null;
+const notified: CalendarEvent[] = [];
 
 export default defineComponent({
   components: {
@@ -82,7 +100,8 @@ export default defineComponent({
       editingEvent: new CalendarEvent("", new Date(), new Date()), // Dummy event
       showCalendarEditor: false,
       editingCalendar: new Calendar(""), // Dummy calendar
-      user: undefined as User | undefined
+      user: undefined as User | undefined,
+      notificationQueue: ref([] as CalendarEvent[])
     }
   },
   computed: {
@@ -91,6 +110,21 @@ export default defineComponent({
     },
     filteredCalendars(): Calendar[] {
       return this.filterableCalendars.filter(c => c.selected).map(c => c.calendar);
+    },
+    showNotificationPopup(): boolean {
+      return this.notificationQueue.length > 0;
+    },
+    notificationEventTitle(): string {
+      if (this.notificationQueue.length > 0) {
+        return this.notificationQueue[0].eventName;
+      }
+      return "";
+    },
+    notificationEventLocation(): string {
+      if (this.notificationQueue.length > 0) {
+        return this.notificationQueue[0].location || "";
+      }
+      return "";
     }
   },
   methods: {
@@ -196,6 +230,8 @@ export default defineComponent({
       if (api.logout()) {
         this.user = undefined;
         this.filterableCalendars = [];
+        if (notificationTimer != null)
+          clearInterval(notificationTimer);
       } else {
         alert("Failed to log out");
       }
@@ -208,6 +244,7 @@ export default defineComponent({
             calendar: cal,
             selected: true
           }));
+          notificationTimer = setInterval(this.checkNotifications, 60 * 1000);
         } else {
           alert("Username or password incorrect");
         }
@@ -226,8 +263,27 @@ export default defineComponent({
             selected: true
           }
         ];
+        notificationTimer = setInterval(this.checkNotifications, 60 * 1000);
       } catch (e) {
         alert("Failed to create account: " + e);
+      }
+    },
+    async checkNotifications() {
+      const events = await api.getNotifications();
+      const range = new Date();
+      range.setMinutes(range.getMinutes() - 3); // 3 minute window
+      const toNotify = events.filter(e => e.startDateTime >= range);
+      for (const event of toNotify) {
+        if (!(notified.includes(event))) {
+          this.notificationQueue.push(event);
+          notified.push(event);
+        }
+      }
+      console.log(this.notificationQueue);
+    },
+    popNotification() {
+      if (this.notificationQueue.length > 0) {
+        this.notificationQueue.shift();
       }
     }
   }

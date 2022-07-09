@@ -12,7 +12,7 @@
       </VCardText>
       <VCardActions>
         <VSpacer />
-        <VBtn v-if="calendar.id" color="red darken-1" text @click="showConfirmDelete">Delete</VBtn>
+        <VBtn v-if="calendar.calendarId" color="red darken-1" text @click="showConfirmDelete">Delete</VBtn>
         <VBtn color="blue darken-1" text @click="$emit('cancel')">Cancel</VBtn>
         <VBtn color="blue darken-1" text @click="$emit('save', buildCalendar())">Save</VBtn>
       </VCardActions>

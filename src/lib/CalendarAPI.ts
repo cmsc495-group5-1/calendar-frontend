@@ -153,7 +153,7 @@ export default class CalendarAPI {
       return this.eventCache[id];
     }
     const eventRaw = (await axios.get(buildUri("calendar", cal.calendarId.toString(), "event", id.toString()))).data;
-    const event = new CalendarEvent(eventRaw.eventName, eventRaw.startDateTime, eventRaw.endDateTime, eventRaw.location, eventRaw.description);
+    const event = new CalendarEvent(eventRaw.eventName, new Date(eventRaw.startDateTime), new Date(eventRaw.endDateTime), eventRaw.location, eventRaw.description);
     event.eventId = eventRaw.eventId;
     this.eventCache[event.eventId!] = event;
     return event;
@@ -187,5 +187,16 @@ export default class CalendarAPI {
     }
     const eventRaw = (await axios.post(buildUri("calendar", cal.calendarId.toString(), "event"), toJson(e), config)).data;
     return await this.getEvent(cal, eventRaw.eventId);
+  }
+
+  async getNotifications(): Promise<CalendarEvent[]> {
+    const eventsRaw = (await axios.get(buildUri("notifications", this.user!.id!))).data;
+    const events = [];
+    for (const eventRaw of eventsRaw) {
+      const fakeCal = new Calendar("");
+      fakeCal.calendarId = eventRaw.calendarId;
+      events.push(await this.getEvent(fakeCal, eventRaw.eventId));
+    }
+    return events;
   }
 }
