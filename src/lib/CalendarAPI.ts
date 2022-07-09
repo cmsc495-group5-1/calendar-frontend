@@ -57,7 +57,9 @@ export default class CalendarAPI {
   }
 
   async createUser(params: any): Promise<User> {
-    const result = (await axios.post(buildUri("user"), params)).data;
+    //const result = (await axios.post(buildUri("user"), params)).data;
+    const result = (await axios.post(buildUri("auth", "create")
+      + `?username=${params.email}&password=${params.password}&passwordConfirmation=${params.passwordConfirm}`)).data;
     if (result.email == null || result.email == "")
       throw "Failed to create user (user exists or password mismatch)";
     const user = new User(result.email, result.firstName, result.lastName);
