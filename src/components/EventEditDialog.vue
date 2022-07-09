@@ -5,9 +5,9 @@
       <VCardText>
         <VContainer>
           <VRow>
-            <VCol><VTextField label="Event Name *" required :value="event.name" /></VCol>
-            <VCol v-if="!event.id">
-              <VSelect :items="calendars" item-text="name" label="Calendar" dense outlined hide-details v-model="selectedCalendar" />
+            <VCol><VTextField label="Event Name *" required v-model="eventName" /></VCol>
+            <VCol v-if="!event.eventId">
+              <VSelect :items="calendars" item-text="name" label="Calendar" dense outlined hide-details return-object v-model="selectedCalendar" />
             </VCol>
           </VRow>
           <VRow>
@@ -25,17 +25,17 @@
             </VCol>
           </VRow>
           <VRow>
-            <VCol><VTextarea label="Description" required :value="event.description" /></VCol>
+            <VCol><VTextarea label="Description" required v-model="eventDescription" /></VCol>
           </VRow>
           <VRow>
-            <VCol><VTextField label="Location" required :value="event.location" /></VCol>
+            <VCol><VTextField label="Location" required v-model="eventLocation" /></VCol>
           </VRow>
         </VContainer>
         <small>*indicates required field</small>
       </VCardText>
       <VCardActions>
         <VSpacer />
-        <VBtn v-if="event.id" color="red darken-1" text @click="showConfirmDelete">Delete</VBtn>
+        <VBtn v-if="event.eventId" color="red darken-1" text @click="showConfirmDelete">Delete</VBtn>
         <VBtn color="blue darken-1" text @click="$emit('cancel')">Cancel</VBtn>
         <VBtn color="blue darken-1" text @click="$emit('save', buildEvent())">Save</VBtn>
       </VCardActions>
@@ -54,6 +54,9 @@ import ConfirmDialog from './ConfirmDialog.vue';
 interface EventEditDialogData {
   startDate: Date;
   endDate: Date;
+  eventLocation: string;
+  eventDescription: string;
+  eventName: string;
   showConfirmDialog: boolean;
   confirmDialogText: string;
   selectedCalendar: Calendar | null;
@@ -81,8 +84,11 @@ export default defineComponent({
   },
   setup(props): EventEditDialogData {
     return {
-      startDate: props.event.startDate,
-      endDate: props.event.endDate,
+      startDate: props.event.startDateTime,
+      endDate: props.event.endDateTime,
+      eventLocation: "",
+      eventDescription: "",
+      eventName: "",
       showConfirmDialog: false,
       confirmDialogText: "",
       selectedCalendar: null
@@ -90,8 +96,14 @@ export default defineComponent({
   },
   watch: {
     event() {
-      this.startDate = this.event.startDate;
-      this.endDate = this.event.endDate;
+      this.startDate = this.event.startDateTime;
+      this.endDate = this.event.endDateTime;
+      this.eventLocation = this.event.location || "";
+      this.eventDescription = this.event.description || "";
+      this.eventName = this.event.eventName;
+      if (this.selectedCalendar == null && this.calendars.length > 0) {
+        this.selectedCalendar = this.calendars[0] as Calendar;
+      }
     }
   },
   mounted() {
@@ -102,14 +114,17 @@ export default defineComponent({
   methods: {
     buildEvent(): CalendarEvent {
       const e = this.event;
-      e.startDate = this.startDate;
-      e.endDate = this.endDate;
+      e.startDateTime = this.startDate;
+      e.endDateTime = this.endDate;
+      e.location = this.eventLocation;
+      e.description = this.eventDescription;
+      e.eventName = this.eventName;
       if (this.selectedCalendar != null && e.calendar == null)
         e.calendar = this.selectedCalendar;
       return e;
     },
     showConfirmDelete() {
-      this.confirmDialogText = `Confirm deletion of ${this.event.name}?`;
+      this.confirmDialogText = `Confirm deletion of ${this.event.eventName}?`;
       this.showConfirmDialog = true;
     },
     confirmDelete() {

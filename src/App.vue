@@ -125,15 +125,15 @@ export default defineComponent({
     },
     async saveEvent(event: CalendarEvent) {
       try {
-        if (event.id) {
-          await api.createEvent(event.calendar!, event);
-          const cals = this.user?.calendars.filter(c => c == event.calendar);
+        if (event.eventId == null) {
+          const created = await api.createEvent(event.calendar!, event);
+          event.eventId = created.eventId;
+          let cals = this.user?.calendars.filter(c => c == event.calendar);
           if (cals != null && cals.length > 0) {
             cals[0].events.push(event);
           }
         } else {
           await api.updateEvent(event);
-          event.calendar?.events.push(event);
         }
         this.showEventEditor = false;
       } catch (e) {
@@ -161,10 +161,10 @@ export default defineComponent({
     },
     async saveCalendar(cal: Calendar) {
       try {
-        if (cal.id) {
+        if (cal.calendarId) {
           await api.updateCalendar(cal);
           this.filterableCalendars.forEach(fc => {
-            if (fc.calendar.id == cal.id) {
+            if (fc.calendar.calendarId == cal.calendarId) {
               fc.calendar.name = cal.name;
             }
           })
