@@ -41,20 +41,25 @@ export default class CalendarAPI {
   }
 
   async login(username: string, password: string): Promise<boolean> {
-    this.user = new User("poopoo@peepee.com", "poo", "pee", undefined);
-    this.user.id = "2c92808381dfa4460181dfb1130e0009";
-    return true;
-
-    const result = (await axios.post(buildUri("login"), {
-      username,
-      password
-    })).data as User;
-    this.user = result;
+    const result = (await axios.post(buildUri("auth", "login") + `?username=${username}&password=${password}`)).data;
+    if (result.email == null || result.email == "")
+      return false;
+    const user = new User(result.email, result.firstName, result.lastName);
+    user.id = result.userId;
+    this.user = user;
+    if (result.calendarIds != null) {
+      for (let id of result.calendarIds.split(",")) {
+        id = id.replace("[", "").replace("]", "").trim();
+        user.calendars.push(await this.getCalendar(id));
+      }
+    }
     return true;
   }
 
-  async createUser(params: object): Promise<User> {
+  async createUser(params: any): Promise<User> {
     const result = (await axios.post(buildUri("user"), params)).data;
+    if (result.email == null || result.email == "")
+      throw "Failed to create user (user exists or password mismatch)";
     const user = new User(result.email, result.firstName, result.lastName);
     user.id = result.userId;
     this.user = user;
@@ -190,6 +195,9 @@ export default class CalendarAPI {
   }
 
   async getNotifications(): Promise<CalendarEvent[]> {
+    if (this.user == null)
+      return [];
+
     const eventsRaw = (await axios.get(buildUri("notifications", this.user!.id!))).data;
     const events = [];
     for (const eventRaw of eventsRaw) {
