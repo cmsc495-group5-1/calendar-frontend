@@ -272,7 +272,9 @@ export default defineComponent({
       const events = await api.getNotifications();
       const range = new Date();
       range.setMinutes(range.getMinutes() - 3); // 3 minute window
-      const toNotify = events.filter(e => e.startDateTime >= range);
+      const range2 = new Date();
+      range2.setMinutes(range.getMinutes() + 1);
+      const toNotify = events.filter(e => e.startDateTime >= range).filter(e => e.startDateTime <= range2);
       for (const event of toNotify) {
         if (!(notified.includes(event))) {
           this.notificationQueue.push(event);
